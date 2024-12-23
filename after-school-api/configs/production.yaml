@@ -1,0 +1,22 @@
+environment: production
+
+server:
+  address: "0.0.0.0"
+  port: 8080
+  cors: ${CORS}
+
+database:
+  host: localhost
+  port: 5432
+  name: after-school-app
+  user: postgres
+  password: ${DB_PASSWORD}
+
+logger:
+  level: debug
+  format: console
+
+auth:
+  jwt_secret: ${JWT_SECRET}
+  default_username: ${DEFAULT_USERNAME}
+  default_password: ${DEFAULT_PASSWORD}
