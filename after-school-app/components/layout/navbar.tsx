@@ -1,6 +1,6 @@
 'use client'
 
-import { Home, Users, GraduationCap, Notebook, School, LogOut } from 'lucide-react';
+import { Home, Users, GraduationCap, School, LogOut } from 'lucide-react';
 import NavButton from './nav-button';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
@@ -16,7 +16,6 @@ const navItems = [
   { icon: School, text: '教職名單', href: '/teachers' },
   { icon: Users, text: '學生資料', href: '/students' },
   { icon: GraduationCap, text: '學生成績', href: '/grades' },
-  { icon: Notebook, text: '備忘錄', href: '/notes' },
 ] as const;
 
 const NavbarLayout = () => {

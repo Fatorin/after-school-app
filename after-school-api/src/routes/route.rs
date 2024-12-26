@@ -1,12 +1,14 @@
 use crate::config::CONFIG;
 use crate::services::{
-    add_student, add_teacher, delete_student, delete_teacher, get_students, get_teachers,
-    login_handler, logout_handler, me_handler, update_student, update_teacher,
+    add_announcement, add_grades, add_student, add_teacher, delete_announcement, delete_grades,
+    delete_student, delete_teacher, get_announcements, get_grades, get_students, get_teachers,
+    login_handler, logout_handler, me_handler, update_announcement, update_grades, update_student,
+    update_teacher,
 };
 use crate::util;
 use axum::body::Body;
 use axum::http::{header, HeaderValue, Method, Request, StatusCode};
-use axum::routing::{delete, get, post, put};
+use axum::routing::{get, post, put};
 use axum::{middleware, middleware::Next, response::Response, Router};
 use log::info;
 use sea_orm::DatabaseConnection;
@@ -30,11 +32,19 @@ pub fn new_route(db: DatabaseConnection) -> Router {
     let protected_routes = Router::new()
         .route("/me", get(me_handler))
         .route("/teachers", get(get_teachers).post(add_teacher))
-        .route("/teachers/:id", put(update_teacher))
-        .route("/teachers/:id", delete(delete_teacher))
+        .route("/teachers/:id", put(update_teacher).delete(delete_teacher))
         .route("/students", get(get_students).post(add_student))
-        .route("/students/:id", put(update_student))
-        .route("/students/:id", delete(delete_student))
+        .route("/students/:id", put(update_student).delete(delete_student))
+        .route("/grades", get(get_grades).post(add_grades))
+        .route("/grades/:id", put(update_grades).delete(delete_grades))
+        .route(
+            "/announcements",
+            get(get_announcements).post(add_announcement),
+        )
+        .route(
+            "/announcements/:id",
+            put(update_announcement).delete(delete_announcement),
+        )
         .layer(middleware::from_fn(auth_middleware));
 
     Router::new()

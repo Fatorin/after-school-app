@@ -1,4 +1,4 @@
-import { format } from "date-fns";
+import { format, isValid } from "date-fns";
 import { ColumnDef } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
 import { Edit2 } from "lucide-react";
@@ -105,13 +105,28 @@ export function renderField<T extends BaseRecord>({
       );
 
     case 'date':
-      const dateValue = value ? new Date(value as string) : undefined;
+      let dateValue: Date | undefined;
+
+      if (value instanceof Date) {
+        dateValue = isValid(value) ? value : undefined;
+      } else if (typeof value === 'string') {
+        const parsedDate = new Date(value);
+        dateValue = isValid(parsedDate) ? parsedDate : undefined;
+      }
+
       if (isEditing) {
         return (
           <div className="space-y-2">
             <DatePicker
               date={dateValue}
-              onChange={(date) => onChange?.(date ? date.toISOString() : null)}
+              onChange={(date) => {
+                if (date && isValid(date)) {
+                  // 將日期轉換為 ISO 字串格式
+                  onChange?.(date);
+                } else {
+                  onChange?.(null);
+                }
+              }}
             />
             {error && <p className="text-sm text-destructive">{error}</p>}
           </div>
@@ -125,8 +140,8 @@ export function renderField<T extends BaseRecord>({
         return (
           <div className="space-y-2">
             <EnumSelect
-              value={value as number}
-              onChange={(val) => onChange?.(Number(val))}
+              value={value as string | number}
+              onChange={val => onChange?.(val)}
               options={options}
             />
             {error && <p className="text-sm text-destructive">{error}</p>}
@@ -174,6 +189,7 @@ export function renderField<T extends BaseRecord>({
         return (
           <div className="space-y-2">
             <Input
+              type={column.type}
               value={String(value || '')}
               onChange={(e) => onChange?.(e.target.value)}
               className={cn(error && "border-destructive")}

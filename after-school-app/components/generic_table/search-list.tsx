@@ -2,6 +2,7 @@ import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { BaseRecord, QuickListProps } from "@/types/generic_table";
+import { format, isValid } from "date-fns";
 
 export function SearchList<T extends BaseRecord>({
   data,
@@ -16,17 +17,21 @@ export function SearchList<T extends BaseRecord>({
   const formatDisplayValue = (record: T, field: keyof T): string => {
     const value = record[field];
     const column = columns.find(col => col.key === field);
-    
+
     if (value == null || value === '') return '';
-    
+
     if (column?.type === 'enum') {
       return column.options?.find(opt => opt.value === value)?.label ?? '';
     }
-    
+
     if (column?.type === 'boolean') {
       return (value as boolean) ? '是' : '否';
     }
-    
+
+    if (column?.type === 'date') {
+      return isValid(value) ? format(value as string, 'yyyy-MM-dd') : '';
+    }
+
     return String(value);
   };
 
@@ -47,7 +52,7 @@ export function SearchList<T extends BaseRecord>({
         {data.map(record => {
           const mainDisplay = formatDisplayValue(record, displayField);
           const subDisplay = formatDisplayValue(record, subDisplayField);
-          
+
           return (
             <button
               key={record.id}

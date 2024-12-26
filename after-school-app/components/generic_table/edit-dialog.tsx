@@ -62,7 +62,23 @@ export function EditDialog<T extends BaseRecord, S extends z.ZodRawShape>({
   }, [open, record, isNewRecord, setMode, setValues, resetForm]);
 
   const handleChange = (field: keyof T & keyof InferSchemaType<S>, value: unknown) => {
-    setValues({ [field]: value } as Partial<InferSchemaType<S>>);
+    let convertedValue = value;
+
+    // 找到對應的列配置
+    const column = columns.find(c => c.key === field);
+
+    if (column?.type === 'number' && typeof value === 'string') {
+      // 如果是空字串，設為 null
+      if (value === '') {
+        convertedValue = null;
+      } else {
+        // 將字串轉換為數字
+        const numValue = Number(value);
+        convertedValue = isNaN(numValue) ? null : numValue;
+      }
+    }
+
+    setValues({ [field]: convertedValue } as Partial<InferSchemaType<S>>);
     validateField(field);
   };
 
@@ -99,10 +115,10 @@ export function EditDialog<T extends BaseRecord, S extends z.ZodRawShape>({
             {isNewRecord ? '請填寫以下欄位內容' : '請修改以下欄位內容'}
           </DialogDescription>
         </DialogHeader>
-        
+
         <div className="flex-1 overflow-y-auto px-2">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 py-4">
-            {columns.map(column => (
+            {columns.filter(c => c.viewOnly !== true).map(column => (
               <div
                 key={String(column.key)}
                 className={cn(

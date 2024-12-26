@@ -65,7 +65,7 @@ export function PreviewCard<T extends BaseRecord, S extends z.ZodRawShape>({
         </CardHeader>
       </Card>
     );
-  }  
+  }
 
   const handleChange = (field: keyof T & keyof InferSchemaType<S>, value: unknown) => {
     setValues({ [field]: value } as Partial<InferSchemaType<S>>);
@@ -106,8 +106,7 @@ export function PreviewCard<T extends BaseRecord, S extends z.ZodRawShape>({
 
   return (
     <Card className="h-[calc(100vh-12rem)] overflow-auto">
-      <CardHeader className="flex flex-row items-center justify-between sticky top-0 bg-background z-10">
-        <CardTitle>{values ? String(values[columns[0].key as keyof typeof values]) : ''}</CardTitle>
+      <CardHeader className="flex flex-row items-center justify-end sticky top-0 bg-background z-10">
         <div className="flex gap-2">
           {isEditable && (
             <>
@@ -135,7 +134,7 @@ export function PreviewCard<T extends BaseRecord, S extends z.ZodRawShape>({
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-2 gap-6">
-          {columns.map(column => {
+          {columns.filter(c => c.viewOnly !== true).map(column => {
             if (column.type === 'password' && !isEditable) {
               return null;
             }

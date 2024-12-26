@@ -2,5 +2,7 @@
 
 pub mod prelude;
 
+pub mod announcements;
+pub mod student_grades;
 pub mod students;
 pub mod teachers;

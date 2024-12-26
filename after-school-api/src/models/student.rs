@@ -100,3 +100,9 @@ impl TryFrom<students::Model> for StudentView {
         })
     }
 }
+
+#[derive(Debug, Serialize)]
+pub struct StudentInfo {
+    pub id: Uuid,
+    pub name: String,
+}

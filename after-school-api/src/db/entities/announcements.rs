@@ -3,15 +3,15 @@
 use sea_orm::entity::prelude::*;
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq)]
-#[sea_orm(table_name = "bulletin_board")]
+#[sea_orm(table_name = "announcements")]
 pub struct Model {
     #[sea_orm(primary_key, auto_increment = false)]
     pub id: Uuid,
     pub teacher_id: Uuid,
-    #[sea_orm(column_type = "Text", nullable)]
-    pub title: Option<String>,
-    #[sea_orm(column_type = "Text", nullable)]
-    pub context: Option<String>,
+    #[sea_orm(column_type = "Text")]
+    pub title: String,
+    #[sea_orm(column_type = "Text")]
+    pub content: String,
     pub created_at: DateTime,
     pub updated_at: DateTime,
     pub deleted_at: Option<DateTime>,

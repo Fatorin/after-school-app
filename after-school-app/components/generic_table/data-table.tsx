@@ -143,6 +143,7 @@ export function DataTable<T extends BaseRecord>({
           <DropdownMenuContent align="end">
             {table
               .getAllColumns()
+              .filter((c) => c.id !== 'actions')
               .filter((column) => column.getCanHide())
               .map((column) => (
                 <DropdownMenuCheckboxItem

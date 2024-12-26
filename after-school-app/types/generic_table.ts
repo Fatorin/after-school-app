@@ -9,7 +9,7 @@ export interface BaseRecord {
 }
 
 export interface FieldOption {
-  value: number;
+  value: number | string;
   label: string;
 }
 
@@ -19,8 +19,9 @@ export interface ColumnConfig<T> {
   isCore?: boolean;
   type?: FieldType;
   options?: FieldOption[];
-  readOnly?: boolean;
   multiline?: boolean;
+  hidden?: boolean;
+  viewOnly?: boolean;
   defaultValue?: unknown;
 }
 
@@ -59,7 +60,7 @@ export interface QuickListProps<T extends BaseRecord> {
 }
 
 export interface EnumSelectProps {
-  value: number;
+  value: string | number;
   onChange: (value: string) => void;
   options: FieldOption[];
   disabled?: boolean;

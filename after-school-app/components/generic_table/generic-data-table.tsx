@@ -114,7 +114,7 @@ export function GenericDataTable<T extends BaseRecord, S extends z.ZodRawShape>(
 
   const tableColumns = useMemo(() => {
     const dataColumns: ColumnDef<T>[] = columns
-      .filter(column => column.type !== 'password')
+      .filter(column => !column.hidden)
       .map(column => ({
         accessorKey: String(column.key),
         header: column.label,
@@ -127,7 +127,6 @@ export function GenericDataTable<T extends BaseRecord, S extends z.ZodRawShape>(
       ...dataColumns,
       {
         id: 'actions',
-        header: '操作',
         cell: ({ row }) => {
           const canEdit = permissionConfig.canEdit(row.original, userRole);
           const canDelete = permissionConfig.canDelete(row.original, userRole);
@@ -143,7 +142,6 @@ export function GenericDataTable<T extends BaseRecord, S extends z.ZodRawShape>(
                   onClick={() => handleOpenDialog(row.original)}
                 >
                   <Pencil className="h-4 w-4 mr-2" />
-                  編輯
                 </Button>
               )}
               {canDelete && (
@@ -156,7 +154,6 @@ export function GenericDataTable<T extends BaseRecord, S extends z.ZodRawShape>(
                   })}
                 >
                   <Trash2 className="h-4 w-4 mr-2" />
-                  刪除
                 </Button>
               )}
             </div>

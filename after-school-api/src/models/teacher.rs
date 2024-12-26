@@ -113,3 +113,9 @@ impl From<EmploymentType> for i16 {
         }
     }
 }
+
+#[derive(Debug, Serialize)]
+pub struct TeacherInfo {
+    pub id: Uuid,
+    pub name: String,
+}
