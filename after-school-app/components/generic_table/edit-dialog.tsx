@@ -8,7 +8,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { cn, GetConvertedValue } from "@/lib/utils";
 import { BaseRecord, ColumnConfig } from '@/types/generic_table';
 import { renderField } from "./helper";
 import { z } from "zod";
@@ -61,23 +61,9 @@ export function EditDialog<T extends BaseRecord, S extends z.ZodRawShape>({
     }
   }, [open, record, isNewRecord, setMode, setValues, resetForm]);
 
-  const handleChange = (field: keyof T & keyof InferSchemaType<S>, value: unknown) => {
-    let convertedValue = value;
-
-    // 找到對應的列配置
-    const column = columns.find(c => c.key === field);
-
-    if (column?.type === 'number' || column?.type === 'enum' && typeof value === 'string') {
-      // 如果是空字串，設為 null
-      if (value === '') {
-        convertedValue = null;
-      } else {
-        // 將字串轉換為數字
-        const numValue = Number(value);
-        convertedValue = isNaN(numValue) ? null : numValue;
-      }
-    }
-
+  const handleChange = (field: keyof T & keyof InferSchemaType<S>, value: unknown) => {  
+    const column = columns.find(c => c.key === field);  
+    const convertedValue =  GetConvertedValue(column?.type, value);
     setValues({ [field]: convertedValue } as Partial<InferSchemaType<S>>);
     validateField(field);
   };
