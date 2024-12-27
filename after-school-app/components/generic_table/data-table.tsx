@@ -163,6 +163,9 @@ export function DataTable<T extends BaseRecord>({
             <DropdownMenuCheckboxItem
               checked={table.getIsAllColumnsVisible()}
               onCheckedChange={(checked) => handleToggleAll(checked)}
+              onSelect={(e) => {
+                e.preventDefault();
+              }}
               className="border-b"
             >
               全選/取消全選
@@ -177,6 +180,9 @@ export function DataTable<T extends BaseRecord>({
                   key={column.id}
                   className="capitalize"
                   checked={column.getIsVisible()}
+                  onSelect={(e) => {
+                    e.preventDefault();
+                  }}
                   onCheckedChange={(value) => column.toggleVisibility(!!value)}
                 >
                   {typeof column.columnDef.header === 'string'
