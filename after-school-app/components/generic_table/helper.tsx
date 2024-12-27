@@ -28,7 +28,6 @@ export function createGenericColumns<T extends BaseRecord>({
     ...columnConfigs.map(config => ({
       accessorKey: String(config.key),
       header: config.label,
-      enableHiding: !config.isCore,
     })),
     {
       id: "actions",

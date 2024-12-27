@@ -27,8 +27,8 @@ const baseSchema = z.object<AnnouncementSchemaShape>({
 });
 
 export const announcementColumns: ColumnConfig<Announcement>[] = [
-  { key: 'title', label: '標題', isCore: true, type: 'text' },
-  { key: 'content', label: '內文', isCore: false, type: 'text', multiline: true },
+  { key: 'title', label: '標題', type: 'text' },
+  { key: 'content', label: '內文', type: 'text', multiline: true },
 ];
 
 const baseDefaultValues = {

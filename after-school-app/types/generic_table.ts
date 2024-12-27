@@ -16,7 +16,6 @@ export interface FieldOption {
 export interface ColumnConfig<T> {
   key: keyof T;
   label: string;
-  isCore?: boolean;
   type?: FieldType;
   options?: FieldOption[];
   multiline?: boolean;

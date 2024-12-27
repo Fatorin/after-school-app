@@ -61,7 +61,6 @@ export const createStudentGradeColumns = (students: Student[]): ColumnConfig<Stu
   {
     key: 'student_id',
     label: '學生',
-    isCore: true,
     type: 'enum',
     options: students.map(student => ({
       value: student.id,
@@ -78,7 +77,6 @@ export const createStudentGradeColumns = (students: Student[]): ColumnConfig<Stu
   {
     key: 'semester',
     label: '考試類別',
-    isCore: true,
     type: 'enum',
     options: [
       { value: 0, label: '期中考' },

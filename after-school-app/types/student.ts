@@ -123,11 +123,10 @@ const baseFields = z.object({
 });
 
 export const studentColumns: ColumnConfig<Student>[] = [
-  { key: 'name', label: '姓名', isCore: true, type: 'text' },
+  { key: 'name', label: '姓名', type: 'text' },
   {
     key: 'gender',
     label: '性別',
-    isCore: true,
     type: 'enum',
     options: [
       { value: 0, label: '男性' },
@@ -148,7 +147,6 @@ export const studentColumns: ColumnConfig<Student>[] = [
   {
     key: 'home_ownership',
     label: '居住類型',
-    isCore: true,
     type: 'enum',
     options: [
       { value: 0, label: '自有' },
