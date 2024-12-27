@@ -68,7 +68,23 @@ export function PreviewCard<T extends BaseRecord, S extends z.ZodRawShape>({
   }
 
   const handleChange = (field: keyof T & keyof InferSchemaType<S>, value: unknown) => {
-    setValues({ [field]: value } as Partial<InferSchemaType<S>>);
+    let convertedValue = value;
+
+    // 找到對應的列配置
+    const column = columns.find(c => c.key === field);
+
+    if (column?.type === 'number' || column?.type === 'enum' && typeof value === 'string') {
+      // 如果是空字串，設為 null
+      if (value === '') {
+        convertedValue = null;
+      } else {
+        // 將字串轉換為數字
+        const numValue = Number(value);
+        convertedValue = isNaN(numValue) ? null : numValue;
+      }
+    }
+    
+    setValues({ [field]: convertedValue } as Partial<InferSchemaType<S>>);
     validateField(field);
     setHasChanges(true);
   };

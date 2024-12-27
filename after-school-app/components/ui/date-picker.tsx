@@ -40,7 +40,6 @@ export function DatePicker({ date, onChange, disabled }: DatePickerProps) {
             onChange(selectedDate ? set(selectedDate, { hours: 0, minutes: 0, seconds: 0, milliseconds: 0 }) : undefined)
           }
           locale={zhTW}
-          initialFocus
         />
       </PopoverContent>
     </Popover>

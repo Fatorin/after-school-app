@@ -24,8 +24,8 @@ export function TeacherList() {
   const fetchTeachers = useCallback(async () => {
     try {
       setIsLoading(true);
-      const result = await handleApiRequest(API_PATH.teachers, { method: 'GET' });
-      setTeachers(result.data);
+      const { data } = await handleApiRequest<Teacher[]>(API_PATH.teachers, { method: 'GET' });
+      if (data) setTeachers(data);
     } finally {
       setIsLoading(false);
     }
@@ -53,7 +53,7 @@ export function TeacherList() {
 
   const handleUpdate = useCallback(async (teacher: Teacher) => {
     const upsertReq = createTeacherUpsertReq(teacher);
-    const updatedTeacher = await handleApiRequest(
+    const { data } = await handleApiRequest<Teacher>(
       `${API_PATH.teachers}/${teacher.id}`,
       {
         method: 'PUT',
@@ -65,11 +65,11 @@ export function TeacherList() {
       }
     );
     await fetchTeachers();
-    return updatedTeacher.data;
+    if (!data) throw new Error('更新失敗：沒有回傳資料');
+    return data;
   }, [handleApiRequest, fetchTeachers]);
 
   const handleDelete = useCallback(async (teacher: Teacher) => {
-    console.log(teacher);
     await handleApiRequest(
       `${API_PATH.teachers}/${teacher.id}`,
       {

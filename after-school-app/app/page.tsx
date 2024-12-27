@@ -29,11 +29,11 @@ const HomePage = () => {
   // 獲取公告列表
   const fetchAnnouncements = useCallback(async () => {
     if (!isAuthenticated) return; // 只在已認證時執行
-    
+
     try {
       setIsLoading(true);
-      const result = await handleApiRequest(API_PATH.announcements, { method: 'GET' });
-      setAnnouncements(result.data);
+      const { data } = await handleApiRequest<Announcement[]>(API_PATH.announcements, { method: 'GET' });
+      if (data) setAnnouncements(data);
     } finally {
       setIsLoading(false);
     }
@@ -85,7 +85,7 @@ const HomePage = () => {
   // 處理公告刪除
   const handleAnnouncementDelete = async (announcement: Announcement) => {
     if (!isAuthenticated || !me) return;
-    
+
     if (!window.confirm('確定要刪除這則公告嗎？')) {
       return;
     }

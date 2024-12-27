@@ -54,7 +54,7 @@ impl TryFrom<(student_grades::Model, String)> for StudentGradeView {
             math_score: student_grade.math_score,
             science_score: student_grade.science_score,
             social_studies_score: student_grade.social_studies_score,
-            comment: None,
+            comment: student_grade.comment,
             updated_at: Utc.from_utc_datetime(&student_grade.updated_at).into(),
         })
     }

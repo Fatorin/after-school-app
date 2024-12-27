@@ -2,10 +2,22 @@
 'use client'
 
 import { useCallback } from 'react';
-import { BASE_API_CONFIG } from "@/lib/utils";
 import { toast } from './use-toast';
+import { convertData } from '@/lib/utils';
 
-export interface ApiError {
+const BASE_API_CONFIG = {
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  credentials: 'include' as const,
+};
+
+interface AppResponse<T = never> {
+  message: string;
+  data?: T extends never ? never : T;
+}
+
+interface ApiError {
   message?: string;
   errors?: {
     [key: string]: string[];
@@ -13,40 +25,36 @@ export interface ApiError {
   error?: string;
 }
 
-export interface SuccessMessage {
+interface SuccessMessage {
   title: string;
   description: string;
 }
 
 export const useApiRequest = () => {
-  return useCallback(async (
+  return useCallback(async <T = never>(
     url: string,
     options: RequestInit,
     successMessage?: SuccessMessage
-  ) => {
+  ): Promise<AppResponse<T>> => {
     try {
       const response = await fetch(url, {
         ...BASE_API_CONFIG,
         ...options,
       });
 
-      const data = await response.json();
+      const rawData = await response.json();
+      const data = convertData<AppResponse<T>>(rawData);
 
       if (!response.ok) {
-        // 處理 422 錯誤
         if (response.status === 422) {
           const errorData = data as ApiError;
-
           if (errorData.errors) {
             const errorMessages = Object.entries(errorData.errors)
               .map(([field, messages]) => `${field}: ${messages.join(', ')}`)
               .join('\n');
-
             throw new Error(errorMessages);
           }
         }
-
-        // 處理其他錯誤
         throw new Error(
           (data as ApiError).message ||
           (data as ApiError).error ||

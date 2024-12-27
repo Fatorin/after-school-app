@@ -67,7 +67,7 @@ export function EditDialog<T extends BaseRecord, S extends z.ZodRawShape>({
     // 找到對應的列配置
     const column = columns.find(c => c.key === field);
 
-    if (column?.type === 'number' && typeof value === 'string') {
+    if (column?.type === 'number' || column?.type === 'enum' && typeof value === 'string') {
       // 如果是空字串，設為 null
       if (value === '') {
         convertedValue = null;

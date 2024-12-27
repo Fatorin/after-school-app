@@ -6,7 +6,6 @@ import { GenericDataTable } from '@/components/generic_table/generic-data-table'
 import { useApiRequest } from '@/hooks/use-api-request';
 import { StudentGrade, StudentGradeUpsertReq, createStudentGradeColumns, studentGradeSchema, StudentGradeSchemaShape } from '@/types/grades';
 import { Student } from '@/types/student';
-import { transformDates } from '@/lib/utils';
 
 const API_PATH = {
   students: `${process.env.NEXT_PUBLIC_API_URL}/api/students`,
@@ -29,11 +28,8 @@ export function StudentGradeList() {
   const fetchStudents = useCallback(async () => {
     try {
       setIsLoading(true);
-      const result = await handleApiRequest(API_PATH.students, { method: 'GET' });
-      const transformedData = result.data.map((item: Student) => 
-        transformDates(item, ['joined_at'])
-      );
-      setStudents(transformedData);
+      const { data } = await handleApiRequest<Student[]>(API_PATH.students, { method: 'GET' });
+      if (data) setStudents(data);
     } finally {
       setIsLoading(false);
     }
@@ -42,11 +38,8 @@ export function StudentGradeList() {
   const fetchStudentGrades = useCallback(async () => {
     try {
       setIsLoading(true);
-      const result = await handleApiRequest(API_PATH.studentGrades, { method: 'GET' });
-      const transformedData = result.data.map((item: StudentGrade) => 
-        transformDates(item, ['updated_at'])
-      );
-      setStudentGrades(transformedData);
+      const { data } = await handleApiRequest<StudentGrade[]>(API_PATH.studentGrades, { method: 'GET' });
+      if (data) setStudentGrades(data);
     } finally {
       setIsLoading(false);
     }
@@ -57,15 +50,13 @@ export function StudentGradeList() {
     fetchStudentGrades();
   }, [fetchStudents, fetchStudentGrades]);
 
-  const handleInsert = useCallback(async (StudentGrade: StudentGrade) => {
-    const upsertReq = createStudentGradeUpsertReq(StudentGrade);
-    const data = JSON.stringify(upsertReq);
-    console.log(data);
+  const handleInsert = useCallback(async (grade: StudentGrade) => {
+    const upsertReq = createStudentGradeUpsertReq(grade);    
     await handleApiRequest(
       API_PATH.studentGrades,
       {
         method: 'POST',
-        body: JSON.stringify(data),
+        body: JSON.stringify(upsertReq),
       },
       {
         title: "新增成功",
@@ -75,10 +66,10 @@ export function StudentGradeList() {
     await fetchStudentGrades();
   }, [handleApiRequest, fetchStudentGrades]);
 
-  const handleUpdate = useCallback(async (StudentGrade: StudentGrade) => {
-    const upsertReq = createStudentGradeUpsertReq(StudentGrade);
-    const updateStudentGrade = await handleApiRequest(
-      `${API_PATH.studentGrades}/${StudentGrade.id}`,
+  const handleUpdate = useCallback(async (grade: StudentGrade) => {
+    const upsertReq = createStudentGradeUpsertReq(grade);
+    const { data } = await handleApiRequest<StudentGrade>(
+      `${API_PATH.studentGrades}/${grade.id}`,
       {
         method: 'PUT',
         body: JSON.stringify(upsertReq),
@@ -89,12 +80,13 @@ export function StudentGradeList() {
       }
     );
     await fetchStudentGrades();
-    return updateStudentGrade.data;
+    if (!data) throw new Error('更新失敗：沒有回傳資料');
+    return data;
   }, [handleApiRequest, fetchStudentGrades]);
 
-  const handleDelete = useCallback(async (studentGrade: StudentGrade) => {
+  const handleDelete = useCallback(async (grade: StudentGrade) => {
     await handleApiRequest(
-      `${API_PATH.studentGrades}/${studentGrade.id}`,
+      `${API_PATH.studentGrades}/${grade.id}`,
       {
         method: 'DELETE'
       },

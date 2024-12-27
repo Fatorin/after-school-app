@@ -1,4 +1,4 @@
-use crate::db::entities::{student_grades, students, teachers};
+use crate::db::entities::{student_grades, students};
 use crate::db::field::update_optional_field;
 use crate::models::{AppResponse, StudentGradeView, UpsertStudentGradeRequest};
 use axum::extract::{Path, State};
@@ -95,6 +95,8 @@ pub async fn update_grades(
 
     if let Some(grades) = find_student_grade_by_id(&db, id).await? {
         let mut student_grades: student_grades::ActiveModel = grades.into();
+        student_grades.academic_year = Set(payload.academic_year);
+        student_grades.semester = Set(payload.semester);
         update_optional_field(&mut student_grades.chinese_score, payload.chinese_score);
         update_optional_field(&mut student_grades.english_score, payload.english_score);
         update_optional_field(&mut student_grades.math_score, payload.math_score);
@@ -113,12 +115,17 @@ pub async fn update_grades(
         let name = students::Entity::find()
             .filter(students::Column::Id.eq(student_grades.student_id))
             .select_only()
-            .column(teachers::Column::Name)
+            .column(students::Column::Name)
             .into_tuple::<String>() // 改用 into_tuple
             .one(&db)
             .await
-            .map_err(|_| AppResponse::error(StatusCode::INTERNAL_SERVER_ERROR, "查詢教師失敗"))?
-            .ok_or_else(|| AppResponse::error(StatusCode::BAD_REQUEST, "找不到對應的教師"))?;
+            .map_err(|e| {
+                AppResponse::error(
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    format!("查詢學生失敗,{}", e),
+                )
+            })?
+            .ok_or_else(|| AppResponse::error(StatusCode::BAD_REQUEST, "找不到對應學生"))?;
 
         let view = StudentGradeView::try_from((student_grades, name)).map_err(|_| {
             AppResponse::error(StatusCode::INTERNAL_SERVER_ERROR, "資料轉換出現異常")

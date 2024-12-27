@@ -29,7 +29,6 @@ export interface StudentGradeUpsertReq {
   science_score?: number;
   social_studies_score?: number;
   comment?: string;
-  updated_at: Date;
 }
 
 export type StudentGradeSchemaShape = {
@@ -42,7 +41,6 @@ export type StudentGradeSchemaShape = {
   math_score: ZodNullable<z.ZodNumber>;
   science_score: ZodNullable<z.ZodNumber>;
   comment: ZodNullable<z.ZodString>;
-  updated_at: z.ZodDate;
 };
 
 const baseFields = z.object({
@@ -56,7 +54,6 @@ const baseFields = z.object({
   math_score: z.number().nullable(),
   science_score: z.number().nullable(),
   comment: z.string().nullable(),
-  updated_at: z.date(),
 });
 
 
@@ -94,7 +91,7 @@ export const createStudentGradeColumns = (students: Student[]): ColumnConfig<Stu
   { key: 'math_score', label: '自然', type: 'number' },
   { key: 'science_score', label: '社會', type: 'number' },
   { key: 'comment', label: '備註', type: 'text' },
-  { key: 'updated_at', label: '更新時間', type: 'date' },
+  { key: 'updated_at', label: '更新時間', type: 'date', viewOnly: true },
 ];
 
 const baseDefaultValues = {

@@ -5,7 +5,6 @@ import { useAuth } from '@/hooks/use-auth';
 import { GenericDataTable } from '@/components/generic_table/generic-data-table';
 import { Student, StudentUpsertReq, studentColumns, studentSchema, StudentSchemaShape } from '@/types/student';
 import { useApiRequest } from '@/hooks/use-api-request';
-import { transformDates } from '@/lib/utils';
 
 const API_PATH = {
   students: `${process.env.NEXT_PUBLIC_API_URL}/api/students`,
@@ -25,11 +24,8 @@ export function StudentList() {
   const fetchStudents = useCallback(async () => {
     try {
       setIsLoading(true);
-      const result = await handleApiRequest(API_PATH.students, { method: 'GET' });
-      const transformedData = result.data.map((item: Student) =>
-        transformDates(item, ['joined_at'])
-      );
-      setStudents(transformedData);
+      const { data } = await handleApiRequest<Student[]>(API_PATH.students, { method: 'GET' });
+      if (data) setStudents(data);
     } finally {
       setIsLoading(false);
     }
@@ -57,7 +53,7 @@ export function StudentList() {
 
   const handleUpdate = useCallback(async (student: Student) => {
     const upsertReq = createStudentUpsertReq(student);
-    const updateStudent = await handleApiRequest(
+    const { data } = await handleApiRequest(
       `${API_PATH.students}/${student.id}`,
       {
         method: 'PUT',
@@ -69,7 +65,8 @@ export function StudentList() {
       }
     );
     await fetchStudents();
-    return updateStudent.data;
+    if (!data) throw new Error('更新失敗：沒有回傳資料');
+    return data;
   }, [handleApiRequest, fetchStudents]);
 
   const handleDelete = useCallback(async (student: Student) => {
