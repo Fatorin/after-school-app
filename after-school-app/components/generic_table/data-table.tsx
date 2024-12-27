@@ -10,12 +10,13 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
@@ -27,7 +28,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ChevronDown, Loader2 } from "lucide-react";
+import { ChevronDown, Loader2, RotateCcw } from "lucide-react";
 import { BaseRecord } from "@/types/generic_table";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -40,11 +41,24 @@ interface DataTableProps<T extends BaseRecord> {
 export function DataTable<T extends BaseRecord>({
   columns,
   data,
-  isLoading = false
+  isLoading = false,
 }: DataTableProps<T>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
+  const [mounted, setMounted] = useState(false);
+
+  // 在客戶端掛載後初始化可見性
+  useEffect(() => {
+    const initialVisibility: VisibilityState = {};
+    columns.forEach((column: ColumnDef<T>) => {
+      if (column.id) {
+        initialVisibility[column.id] = true;
+      }
+    });
+    setColumnVisibility(initialVisibility);
+    setMounted(true);
+  }, [columns]);
 
   const table = useReactTable({
     data,
@@ -63,7 +77,6 @@ export function DataTable<T extends BaseRecord>({
     },
   });
 
-  // 使用 useCallback 優化事件處理
   const handleSearchChange = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
       table.getColumn("name")?.setFilterValue(event.target.value);
@@ -71,49 +84,61 @@ export function DataTable<T extends BaseRecord>({
     [table]
   );
 
-  // 使用 useMemo 優化加載狀態渲染
-  const loadingBody = useMemo(
-    () => (
-      <TableBody>
-        {Array.from({ length: 5 }).map((_, index) => (
-          <TableRow key={index}>
-            {columns.map((_, cellIndex) => (
-              <TableCell key={cellIndex} className="px-6">
-                <Skeleton className="h-4 w-[100px]" />
-              </TableCell>
-            ))}
-          </TableRow>
-        ))}
-      </TableBody>
-    ),
-    [columns]
-  );
+  // 處理全選/取消全選
+  const handleToggleAll = useCallback((checked: boolean) => {
+    const newVisibility: VisibilityState = {};
+    table.getAllColumns()
+      .filter((column) => column.id !== 'actions')
+      .forEach((column) => {
+        if (column.id) {
+          newVisibility[column.id] = checked;
+        }
+      });
+    table.setColumnVisibility(newVisibility);
+  }, [table]);
 
-  // 使用 useMemo 優化表格內容
-  const tableContent = useMemo(
-    () => (
-      <TableBody>
-        {table.getRowModel().rows?.length ? (
-          table.getRowModel().rows.map((row) => (
-            <TableRow key={row.id}>
-              {row.getVisibleCells().map((cell) => (
-                <TableCell key={cell.id} className="px-6">
-                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                </TableCell>
+  // 重設為預設值
+  const handleReset = useCallback(() => {
+    const defaultVisibility: VisibilityState = {};
+    table.getAllColumns()
+      .filter((column) => column.id !== 'actions')
+      .forEach((column) => {
+        if (column.id) {
+          defaultVisibility[column.id] = true;
+        }
+      });
+    table.setColumnVisibility(defaultVisibility);
+  }, [table]);
+
+  // 如果還未掛載，返回加載狀態
+  if (!mounted) {
+    return (
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              {columns.map((_, index) => (
+                <TableHead key={index} className="px-6">
+                  <Skeleton className="h-4 w-[100px]" />
+                </TableHead>
               ))}
             </TableRow>
-          ))
-        ) : (
-          <TableRow>
-            <TableCell colSpan={columns.length} className="h-24 text-center px-6">
-              沒有資料
-            </TableCell>
-          </TableRow>
-        )}
-      </TableBody>
-    ),
-    [table, columns]
-  );
+          </TableHeader>
+          <TableBody>
+            {Array.from({ length: 5 }).map((_, index) => (
+              <TableRow key={index}>
+                {columns.map((_, cellIndex) => (
+                  <TableCell key={cellIndex} className="px-6">
+                    <Skeleton className="h-4 w-[100px]" />
+                  </TableCell>
+                ))}
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
@@ -140,7 +165,15 @@ export function DataTable<T extends BaseRecord>({
               顯示欄位 <ChevronDown className="ml-2 h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
+          <DropdownMenuContent align="end" className="w-[200px]">
+            <DropdownMenuCheckboxItem
+              checked={table.getIsAllColumnsVisible()}
+              onCheckedChange={(checked) => handleToggleAll(checked)}
+              className="border-b"
+            >
+              全選/取消全選
+            </DropdownMenuCheckboxItem>
+            <DropdownMenuSeparator />
             {table
               .getAllColumns()
               .filter((c) => c.id !== 'actions')
@@ -151,15 +184,24 @@ export function DataTable<T extends BaseRecord>({
                   className="capitalize"
                   checked={column.getIsVisible()}
                   onCheckedChange={(value) => column.toggleVisibility(!!value)}
-                  onSelect={(event) => {
-                    event.preventDefault();
-                  }}
                 >
                   {typeof column.columnDef.header === 'string'
                     ? column.columnDef.header
                     : column.id}
                 </DropdownMenuCheckboxItem>
               ))}
+            <DropdownMenuSeparator />
+            <div className="p-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full"
+                onClick={handleReset}
+              >
+                <RotateCcw className="mr-2 h-4 w-4" />
+                重設預設值
+              </Button>
+            </div>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
@@ -169,22 +211,64 @@ export function DataTable<T extends BaseRecord>({
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id} className="px-6">
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(header.column.columnDef.header, header.getContext())}
-                  </TableHead>
-                ))}
+                {headerGroup.headers
+                  .filter(header => header.column.getIsVisible())
+                  .map((header) => (
+                    <TableHead key={header.id} className="px-6">
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(
+                            header.column.columnDef.header,
+                            header.getContext()
+                          )}
+                    </TableHead>
+                  ))}
               </TableRow>
             ))}
           </TableHeader>
-          {isLoading ? loadingBody : tableContent}
+          <TableBody>
+            {isLoading ? (
+              Array.from({ length: 5 }).map((_, index) => (
+                <TableRow key={index}>
+                  {columns.map((_, cellIndex) => (
+                    <TableCell key={cellIndex} className="px-6">
+                      <Skeleton className="h-4 w-[100px]" />
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))
+            ) : table.getRowModel().rows.length ? (
+              table.getRowModel().rows.map((row) => (
+                <TableRow key={row.id}>
+                  {row.getVisibleCells().map((cell) => (
+                    <TableCell key={cell.id} className="px-6">
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext()
+                      )}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell
+                  colSpan={table.getAllColumns().filter(col => col.getIsVisible()).length}
+                  className="h-24 text-center px-6"
+                >
+                  沒有資料
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
         </Table>
       </div>
 
       <div className="flex items-center justify-between">
-        <div></div>
+        <div className="text-sm text-muted-foreground">
+          第 {table.getState().pagination.pageIndex + 1} 頁，
+          共 {table.getPageCount()} 頁
+        </div>
         <div className="flex items-center gap-2">
           <Button
             variant="outline"
