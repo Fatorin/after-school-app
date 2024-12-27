@@ -28,7 +28,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ChevronDown, Loader2, RotateCcw } from "lucide-react";
+import { ChevronDown, Loader2, RotateCcw, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { BaseRecord } from "@/types/generic_table";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -46,9 +46,7 @@ export function DataTable<T extends BaseRecord>({
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
-  const [mounted, setMounted] = useState(false);
 
-  // 在客戶端掛載後初始化可見性
   useEffect(() => {
     const initialVisibility: VisibilityState = {};
     columns.forEach((column: ColumnDef<T>) => {
@@ -57,7 +55,6 @@ export function DataTable<T extends BaseRecord>({
       }
     });
     setColumnVisibility(initialVisibility);
-    setMounted(true);
   }, [columns]);
 
   const table = useReactTable({
@@ -84,7 +81,6 @@ export function DataTable<T extends BaseRecord>({
     [table]
   );
 
-  // 處理全選/取消全選
   const handleToggleAll = useCallback((checked: boolean) => {
     const newVisibility: VisibilityState = {};
     table.getAllColumns()
@@ -97,7 +93,6 @@ export function DataTable<T extends BaseRecord>({
     table.setColumnVisibility(newVisibility);
   }, [table]);
 
-  // 重設為預設值
   const handleReset = useCallback(() => {
     const defaultVisibility: VisibilityState = {};
     table.getAllColumns()
@@ -110,8 +105,7 @@ export function DataTable<T extends BaseRecord>({
     table.setColumnVisibility(defaultVisibility);
   }, [table]);
 
-  // 如果還未掛載，返回加載狀態
-  if (!mounted) {
+  if (isLoading) {
     return (
       <div className="rounded-md border">
         <Table>
@@ -215,12 +209,32 @@ export function DataTable<T extends BaseRecord>({
                   .filter(header => header.column.getIsVisible())
                   .map((header) => (
                     <TableHead key={header.id} className="px-6">
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
+                      {header.isPlaceholder ? null : (
+                        <div className="flex items-center">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => header.column.toggleSorting()}
+                            className="-ml-3 h-8"
+                          >
+                            {flexRender(
+                              header.column.columnDef.header,
+                              header.getContext()
+                            )}
+                            {header.column.getCanSort() && (
+                              <span className="ml-2">
+                                {header.column.getIsSorted() === "asc" ? (
+                                  <ArrowUp className="h-4 w-4" />
+                                ) : header.column.getIsSorted() === "desc" ? (
+                                  <ArrowDown className="h-4 w-4" />
+                                ) : (
+                                  <ArrowUpDown className="h-4 w-4" />
+                                )}
+                              </span>
+                            )}
+                          </Button>
+                        </div>
+                      )}
                     </TableHead>
                   ))}
               </TableRow>
