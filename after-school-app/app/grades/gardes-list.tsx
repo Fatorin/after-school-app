@@ -1,102 +1,47 @@
 'use client'
 
-import { useState, useCallback, useEffect } from 'react';
+import { useCallback, useEffect } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { GenericDataTable } from '@/components/generic_table/generic-data-table';
-import { useApiRequest } from '@/hooks/use-api-request';
-import { StudentGrade, StudentGradeUpsertReq, createStudentGradeColumns, studentGradeSchema, StudentGradeSchemaShape } from '@/types/grades';
-import { Student } from '@/types/student';
-
-const API_PATH = {
-  students: `${process.env.NEXT_PUBLIC_API_URL}/api/students`,
-  studentGrades: `${process.env.NEXT_PUBLIC_API_URL}/api/grades`,
-};
-
-const createStudentGradeUpsertReq = (StudentGrade: StudentGrade): StudentGradeUpsertReq => {
-  const { ...upsertReq } = StudentGrade;
-  return upsertReq;
-};
+import { StudentGrade, createStudentGradeColumns, studentGradeSchema, StudentGradeSchemaShape, StudentGradeUpsertReq } from '@/types/grades';
+import { Student, StudentUpsertReq } from '@/types/student';
+import { API_PATH } from '../apis/common';
+import { useCrud } from '@/hooks/use-crud';
 
 export function StudentGradeList() {
-  const [isLoading, setIsLoading] = useState(true);
-  const [studentGrades, setStudentGrades] = useState<StudentGrade[]>([]);
-  const [students, setStudents] = useState<Student[]>([]);
   const { me } = useAuth();
-  const handleApiRequest = useApiRequest();
+
+  const {
+    items: students,
+  } = useCrud<Student, StudentUpsertReq>({
+    basePath: API_PATH.students,
+    dateFields: {
+      date_of_birth: true
+    }
+  });
+
+  const {
+    items,
+    initialized,
+    isLoading,
+    fetchItems,
+    handleInsert,
+    handleUpdate,
+    handleDelete
+  } = useCrud<StudentGrade, StudentGradeUpsertReq>({
+    basePath: API_PATH.studentGrades,
+    dateFields: {
+      updated_at: true
+    }
+  });
+
   const studentGradeColumns = createStudentGradeColumns(students);
 
-  const fetchStudents = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      const { data } = await handleApiRequest<Student[]>(API_PATH.students, { method: 'GET' });
-      if (data) setStudents(data);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [handleApiRequest]);
-
-  const fetchStudentGrades = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      const { data } = await handleApiRequest<StudentGrade[]>(API_PATH.studentGrades, { method: 'GET' });
-      if (data) setStudentGrades(data);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [handleApiRequest]);
-
   useEffect(() => {
-    fetchStudents();
-    fetchStudentGrades();
-  }, [fetchStudents, fetchStudentGrades]);
-
-  const handleInsert = useCallback(async (grade: StudentGrade) => {
-    const upsertReq = createStudentGradeUpsertReq(grade);    
-    await handleApiRequest(
-      API_PATH.studentGrades,
-      {
-        method: 'POST',
-        body: JSON.stringify(upsertReq),
-      },
-      {
-        title: "新增成功",
-        description: "學生資料已新增",
-      }
-    );
-    await fetchStudentGrades();
-  }, [handleApiRequest, fetchStudentGrades]);
-
-  const handleUpdate = useCallback(async (grade: StudentGrade) => {
-    const upsertReq = createStudentGradeUpsertReq(grade);
-    const { data } = await handleApiRequest<StudentGrade>(
-      `${API_PATH.studentGrades}/${grade.id}`,
-      {
-        method: 'PUT',
-        body: JSON.stringify(upsertReq),
-      },
-      {
-        title: "更新成功",
-        description: "學生資料已更新",
-      }
-    );
-    await fetchStudentGrades();
-    if (!data) throw new Error('更新失敗：沒有回傳資料');
-    return data;
-  }, [handleApiRequest, fetchStudentGrades]);
-
-  const handleDelete = useCallback(async (grade: StudentGrade) => {
-    await handleApiRequest(
-      `${API_PATH.studentGrades}/${grade.id}`,
-      {
-        method: 'DELETE'
-      },
-      {
-        title: "刪除成功",
-        description: "學生成績已刪除",
-      }
-    );
-    await fetchStudentGrades();
-  }, [handleApiRequest, fetchStudentGrades]);
+    if (!initialized) {
+      fetchItems().catch(console.error);
+    }
+  }, [fetchItems, initialized]);
 
   const permissionConfig = {
     canEdit: useCallback(() => {
@@ -111,7 +56,7 @@ export function StudentGradeList() {
 
   return (
     <GenericDataTable<StudentGrade, StudentGradeSchemaShape>
-      data={studentGrades}
+      data={items}
       columns={studentGradeColumns}
       viewConfig={{
         enablePreviewMode: true,

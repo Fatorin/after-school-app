@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { ColumnConfig } from "./generic_table";
+import { DateFieldsMap } from "./common";
 
 export interface Announcement {
   id: string;
@@ -10,6 +11,11 @@ export interface Announcement {
   created_at: Date;
   updated_at: Date;
 }
+
+export const announcementDateFields: DateFieldsMap<Announcement> = {
+  created_at: true,
+  updated_at: true
+};
 
 export interface AnnouncementUpsertReq {
   title: string;

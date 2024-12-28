@@ -2,6 +2,7 @@ import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 import { isValid, parse, parseISO } from "date-fns";
 import { FieldType } from "@/types/generic_table";
+import { DateFieldsMap } from "@/types/common";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -24,37 +25,43 @@ export const GetConvertedValue = (fileType: FieldType | undefined, value: unknow
   return convertedValue;
 };
 
-// 轉換資料中的日期字串為 Date 物件
-export function convertData<T>(data: T): T {
-  if (data === null || data === undefined) return data;
+// 日期轉換函數
+function convertToDate(value: unknown): Date | undefined {
+  if (value === undefined || value === null) return undefined;
+  if (value instanceof Date) return value;
+  if (typeof value !== 'string') return undefined;
 
-  if (typeof data === 'string') {
-    // 嘗試將字串解析為日期
-    const isoDate = parseISO(data);
-    if (isValid(isoDate)) {
-      return isoDate as unknown as T;
-    }
-    // 如果不是有效的 ISO 格式，嘗試解析其他格式
-    const mysqlDate = parse(data, 'yyyy-MM-dd HH:mm:ss', new Date());
-    if (isValid(mysqlDate)) {
-      return mysqlDate as unknown as T;
-    }
-    return data;
-  }
+  // 嘗試解析 ISO 格式
+  const isoDate = parseISO(value);
+  if (isValid(isoDate)) return isoDate;
 
+  // 嘗試解析 MySQL 格式
+  const mysqlDate = parse(value, 'yyyy-MM-dd HH:mm:ss', new Date());
+  if (isValid(mysqlDate)) return mysqlDate;
+
+  return undefined;
+}
+
+// 主要轉換函數
+export function convertDates<T extends object>(
+  data: unknown,
+  dateFields: DateFieldsMap<T>
+): T {
   if (Array.isArray(data)) {
-    return data.map(item => convertData(item)) as unknown as T;
+    return data.map(item => convertDates(item, dateFields)) as T;
   }
 
-  if (typeof data === 'object') {
-    const converted = Object.fromEntries(
-      Object.entries(data as object).map(([key, value]) => [
-        key,
-        convertData(value)
-      ])
-    );
-    return converted as T;
+  if (!data || typeof data !== 'object') {
+    throw new Error('無效的輸入資料');
   }
 
-  return data;
+  const result = { ...data } as T;
+
+  Object.keys(dateFields).forEach((key) => {
+    if (key in result) {
+      result[key as keyof T] = convertToDate(result[key as keyof T]) as T[keyof T];
+    }
+  });
+
+  return result;
 }

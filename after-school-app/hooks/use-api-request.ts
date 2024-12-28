@@ -3,7 +3,8 @@
 
 import { useCallback } from 'react';
 import { toast } from './use-toast';
-import { convertData } from '@/lib/utils';
+import { DateFieldsMap } from '@/types/common';
+import { convertDates } from '@/lib/utils';
 
 const BASE_API_CONFIG = {
   headers: {
@@ -11,6 +12,13 @@ const BASE_API_CONFIG = {
   },
   credentials: 'include' as const,
 };
+
+interface ApiRequestParams<T extends object> {
+  url: string;
+  options?: RequestInit;
+  dateFields?: DateFieldsMap<T>;
+  successMessage?: SuccessMessage;
+}
 
 interface AppResponse<T = never> {
   message: string;
@@ -31,11 +39,12 @@ interface SuccessMessage {
 }
 
 export const useApiRequest = () => {
-  return useCallback(async <T = never>(
-    url: string,
-    options: RequestInit,
-    successMessage?: SuccessMessage
-  ): Promise<AppResponse<T>> => {
+  return useCallback(async <T extends object = never>({
+    url,
+    options = {},
+    dateFields,
+    successMessage
+  }: ApiRequestParams<T>): Promise<AppResponse<T>> => {
     try {
       const response = await fetch(url, {
         ...BASE_API_CONFIG,
@@ -43,7 +52,13 @@ export const useApiRequest = () => {
       });
 
       const rawData = await response.json();
-      const data = convertData<AppResponse<T>>(rawData);
+
+      const data: AppResponse<T> = dateFields && rawData.data
+        ? {
+          ...rawData,
+          data: convertDates(rawData.data, dateFields)
+        }
+        : rawData;
 
       if (!response.ok) {
         if (response.status === 422) {

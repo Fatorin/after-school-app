@@ -1,5 +1,6 @@
 import { ColumnConfig } from "@/types/generic_table";
 import { z, ZodNullable } from "zod";
+import { DateFieldsMap } from "./common";
 
 export interface Student {
   id: string;
@@ -29,6 +30,10 @@ export interface Student {
   comment?: string;
   joined_at: Date;
 }
+
+export const studentDateFields: DateFieldsMap<Student> = {
+  joined_at: true
+};
 
 export interface StudentUpsertReq {
   name: string;
