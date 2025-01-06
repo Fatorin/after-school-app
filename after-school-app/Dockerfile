@@ -32,4 +32,4 @@ COPY --from=builder /app/.next/static ./.next/static
 EXPOSE 3000
 
 # 啟動應用程式
-CMD ["npm", "start"]
+CMD ["node", "server.js"]
