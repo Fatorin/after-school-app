@@ -1,13 +1,15 @@
+mod announcement;
+mod attendance;
 mod auth;
 mod common;
-mod teacher;
 mod student;
 mod student_grade;
-mod announcement;
+mod teacher;
 
+pub use announcement::*;
+pub use attendance::*;
 pub use auth::*;
 pub use common::*;
-pub use teacher::*;
 pub use student::*;
 pub use student_grade::*;
-pub use announcement::*;
+pub use teacher::*;

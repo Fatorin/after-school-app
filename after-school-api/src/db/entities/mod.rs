@@ -3,6 +3,8 @@
 pub mod prelude;
 
 pub mod announcements;
+pub mod attendance_records;
+pub mod attendance_students;
 pub mod student_grades;
 pub mod students;
 pub mod teachers;

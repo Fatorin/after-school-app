@@ -13,6 +13,8 @@ export function StudentGradeList() {
 
   const {
     items: students,
+    fetchItems: fetchStudents,
+    initialized: fetchStudentsInitialized,
   } = useCrud<Student, StudentUpsertReq>({
     basePath: API_PATH.students,
     dateFields: {
@@ -38,10 +40,11 @@ export function StudentGradeList() {
   const studentGradeColumns = createStudentGradeColumns(students);
 
   useEffect(() => {
-    if (!initialized) {
+    if (!initialized && !fetchStudentsInitialized) {
+      fetchStudents().catch(console.error);
       fetchItems().catch(console.error);
     }
-  }, [fetchItems, initialized]);
+  }, [fetchItems, fetchStudents, initialized, fetchStudentsInitialized]);
 
   const permissionConfig = {
     canEdit: useCallback(() => {

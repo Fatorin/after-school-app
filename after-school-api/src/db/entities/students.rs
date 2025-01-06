@@ -57,13 +57,30 @@ pub struct Model {
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
+    #[sea_orm(has_many = "super::attendance_students::Entity")]
+    AttendanceStudents,
     #[sea_orm(has_many = "super::student_grades::Entity")]
     StudentGrades,
+}
+
+impl Related<super::attendance_students::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::AttendanceStudents.def()
+    }
 }
 
 impl Related<super::student_grades::Entity> for Entity {
     fn to() -> RelationDef {
         Relation::StudentGrades.def()
+    }
+}
+
+impl Related<super::attendance_records::Entity> for Entity {
+    fn to() -> RelationDef {
+        super::attendance_students::Relation::AttendanceRecords.def()
+    }
+    fn via() -> Option<RelationDef> {
+        Some(super::attendance_students::Relation::Students.def().rev())
     }
 }
 

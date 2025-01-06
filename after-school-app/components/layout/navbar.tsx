@@ -16,6 +16,7 @@ const navItems = [
   { icon: School, text: '教職名單', href: '/teachers' },
   { icon: Users, text: '學生資料', href: '/students' },
   { icon: GraduationCap, text: '學生成績', href: '/grades' },
+  { icon: GraduationCap, text: '簽到表', href: '/attendances' },
 ] as const;
 
 const NavbarLayout = () => {
