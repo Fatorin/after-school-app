@@ -8,7 +8,7 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 
 # 安裝相依套件
-RUN npm install
+RUN npm ci
 
 # 複製專案所有檔案
 COPY . .
@@ -24,10 +24,9 @@ FROM node:22-alpine
 WORKDIR /app
 
 # 從 builder 階段複製編譯好的檔案
-COPY --from=builder /app ./
-
-# 安裝 production-only 相依套件
-RUN npm install --production
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
 
 # 預設使用的埠
 EXPOSE 3000
