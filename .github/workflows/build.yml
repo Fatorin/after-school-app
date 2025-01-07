@@ -28,12 +28,17 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     
+    - name: 檢查工作目錄
+      run: |
+        echo "當前目錄："
+        pwd
+        echo "目錄內容："
+        ls -la
+        
     - name: 安裝最新版本的 Rust
-      uses: actions-rs/toolchain@v1
+      uses: dtolnay/rust-toolchain@stable
       with:
-        toolchain: stable
-        override: true
-        target: x86_64-unknown-linux-gnu
+        targets: x86_64-unknown-linux-gnu
     
     - name: 建立快取
       uses: actions/cache@v3
@@ -41,34 +46,41 @@ jobs:
         path: |
           ~/.cargo/registry
           ~/.cargo/git
-          target
+          after-school-app/target
         key: ${{ runner.os }}-cargo-${{ hashFiles('after-school-app/Cargo.lock') }}
         restore-keys: |
           ${{ runner.os }}-cargo-
     
-    - name: 編譯發布版本
-      working-directory: after-school-app
-      run: cargo build --release --target x86_64-unknown-linux-gnu
+    - name: 進入專案目錄並編譯
+      run: |
+        echo "進入 after-school-app 目錄"
+        cd after-school-app
+        echo "顯示 Cargo.toml 位置"
+        ls -la Cargo.toml
+        echo "開始編譯"
+        cargo build --release --target x86_64-unknown-linux-gnu
+        echo "編譯完成，檢查輸出檔案"
+        ls -la target/x86_64-unknown-linux-gnu/release/
     
     - name: 壓縮二進制檔案
-      working-directory: after-school-app
       run: |
-        cd target/x86_64-unknown-linux-gnu/release
-        tar -czf ../../../after-school-app-linux-x64.tar.gz after-school-app
-        cd ../../..
+        cd after-school-app/target/x86_64-unknown-linux-gnu/release/
+        BINARY_NAME=$(ls after-school-app* | grep -v '\.d$' | head -n 1)
+        echo "找到二進制檔案：$BINARY_NAME"
+        tar -czvf ../../../../after-school-app-linux-x64.tar.gz "$BINARY_NAME"
     
     - name: 上傳編譯結果
       uses: actions/upload-artifact@v3
       with:
         name: after-school-app-linux
-        path: after-school-app/after-school-app-linux-x64.tar.gz
+        path: after-school-app-linux-x64.tar.gz
         retention-days: 5
     
     - name: 建立發布版本
       if: startsWith(github.ref, 'refs/tags/') || github.event.inputs.release_type == 'release'
       uses: softprops/action-gh-release@v1
       with:
-        files: after-school-app/after-school-app-linux-x64.tar.gz
+        files: after-school-app-linux-x64.tar.gz
         name: ${{ startsWith(github.ref, 'refs/tags/') && format('After School App {0}', github.ref_name) || format('After School App Test Build {0}', github.sha) }}
         body: |
           After School App Linux 版本發布
