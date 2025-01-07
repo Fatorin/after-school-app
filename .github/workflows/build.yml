@@ -1,0 +1,80 @@
+name: After School App Linux Build & Release
+
+on:
+  workflow_dispatch:  # 添加手動觸發選項
+    inputs:
+      release_type:
+        description: '發布類型'
+        required: true
+        default: 'test'
+        type: choice
+        options:
+          - test
+          - release
+  push:
+    tags:
+      - 'v*'
+    paths:
+      - 'after-school-app/**'
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    defaults:
+      run:
+        working-directory: after-school-app
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: 安裝最新版本的 Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        override: true
+        target: x86_64-unknown-linux-gnu
+    
+    - name: 建立快取
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          after-school-app/target
+        key: ${{ runner.os }}-cargo-${{ hashFiles('after-school-app/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-cargo-
+    
+    - name: 編譯發布版本
+      run: cargo build --release --target x86_64-unknown-linux-gnu
+    
+    - name: 壓縮二進制檔案
+      run: |
+        cd target/x86_64-unknown-linux-gnu/release
+        tar -czf ../../../after-school-app-linux-x64.tar.gz after-school-app
+        cd ../../..
+    
+    - name: 上傳編譯結果
+      uses: actions/upload-artifact@v3
+      with:
+        name: after-school-app-linux
+        path: after-school-app/after-school-app-linux-x64.tar.gz
+        retention-days: 5  # 保存 5 天
+    
+    - name: 建立發布版本
+      if: startsWith(github.ref, 'refs/tags/') || github.event.inputs.release_type == 'release'
+      uses: softprops/action-gh-release@v1
+      with:
+        files: after-school-app/after-school-app-linux-x64.tar.gz
+        name: ${{ startsWith(github.ref, 'refs/tags/') && format('After School App {0}', github.ref_name) || format('After School App Test Build {0}', github.sha) }}
+        body: |
+          After School App Linux 版本發布
+          ${{ startsWith(github.ref, 'refs/tags/') && format('版本：{0}', github.ref_name) || format('測試版本 提交：{0}', github.sha) }}
+        prerelease: ${{ github.event.inputs.release_type == 'test' }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
