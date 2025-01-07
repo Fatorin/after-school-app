@@ -1,4 +1,4 @@
-name: After School App Linux Build & Release
+name: After School API Linux Build & Release
 
 on:
   workflow_dispatch:
@@ -15,7 +15,7 @@ on:
     tags:
       - 'v*'
     paths:
-      - 'after-school-app/**'
+      - 'after-school-api/**'
 
 env:
   CARGO_TERM_COLOR: always
@@ -34,8 +34,8 @@ jobs:
         pwd
         ls -la
         echo ""
-        echo "=== after-school-app 目錄內容 ==="
-        ls -la after-school-app/
+        echo "=== after-school-api 目錄內容 ==="
+        ls -la after-school-api/
         echo ""
         echo "=== 遞迴顯示所有 Cargo.toml ==="
         find . -name "Cargo.toml"
@@ -45,25 +45,20 @@ jobs:
       with:
         targets: x86_64-unknown-linux-gnu
     
-    - name: 檢查 Rust 環境
-      run: |
-        rustc --version
-        cargo --version
-    
     - name: 建立快取
       uses: actions/cache@v3
       with:
         path: |
           ~/.cargo/registry
           ~/.cargo/git
-          after-school-app/target
-        key: ${{ runner.os }}-cargo-${{ hashFiles('after-school-app/Cargo.lock') }}
+          after-school-api/target
+        key: ${{ runner.os }}-cargo-${{ hashFiles('after-school-api/Cargo.lock') }}
         restore-keys: |
           ${{ runner.os }}-cargo-
     
     - name: 進入專案目錄並編譯
       run: |
-        cd after-school-app
+        cd after-school-api
         if [ ! -f "Cargo.toml" ]; then
           echo "錯誤：在目前目錄找不到 Cargo.toml"
           echo "目前目錄內容："
@@ -75,31 +70,31 @@ jobs:
     - name: 壓縮二進制檔案
       if: success()
       run: |
-        cd after-school-app/target/x86_64-unknown-linux-gnu/release/
-        BINARY_NAME=$(ls after-school-app* | grep -v '\.d$' | head -n 1)
+        cd after-school-api/target/x86_64-unknown-linux-gnu/release/
+        BINARY_NAME=$(ls after-school-api* | grep -v '\.d$' | head -n 1)
         if [ -z "$BINARY_NAME" ]; then
           echo "錯誤：找不到編譯後的二進制檔案"
           exit 1
         fi
         echo "找到二進制檔案：$BINARY_NAME"
-        tar -czvf ../../../../after-school-app-linux-x64.tar.gz "$BINARY_NAME"
+        tar -czvf ../../../../after-school-api-linux-x64.tar.gz "$BINARY_NAME"
     
     - name: 上傳編譯結果
       if: success()
       uses: actions/upload-artifact@v3
       with:
-        name: after-school-app-linux
-        path: after-school-app-linux-x64.tar.gz
+        name: after-school-api-linux
+        path: after-school-api-linux-x64.tar.gz
         retention-days: 5
     
     - name: 建立發布版本
       if: (success() && (startsWith(github.ref, 'refs/tags/') || github.event.inputs.release_type == 'release'))
       uses: softprops/action-gh-release@v1
       with:
-        files: after-school-app-linux-x64.tar.gz
-        name: ${{ startsWith(github.ref, 'refs/tags/') && format('After School App {0}', github.ref_name) || format('After School App Test Build {0}', github.sha) }}
+        files: after-school-api-linux-x64.tar.gz
+        name: ${{ startsWith(github.ref, 'refs/tags/') && format('After School API {0}', github.ref_name) || format('After School API Test Build {0}', github.sha) }}
         body: |
-          After School App Linux 版本發布
+          After School API Linux 版本發布
           ${{ startsWith(github.ref, 'refs/tags/') && format('版本：{0}', github.ref_name) || format('測試版本 提交：{0}', github.sha) }}
         prerelease: ${{ github.event.inputs.release_type == 'test' }}
       env:
