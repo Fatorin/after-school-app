@@ -23,22 +23,10 @@ env:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     
     steps:
     - uses: actions/checkout@v4
-    
-    - name: 檢查目錄結構
-      run: |
-        echo "=== 根目錄內容 ==="
-        pwd
-        ls -la
-        echo ""
-        echo "=== after-school-api 目錄內容 ==="
-        ls -la after-school-api/
-        echo ""
-        echo "=== 遞迴顯示所有 Cargo.toml ==="
-        find . -name "Cargo.toml"
     
     - name: 安裝最新版本的 Rust
       uses: dtolnay/rust-toolchain@stable
@@ -56,36 +44,26 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-cargo-
     
-    - name: 進入專案目錄並編譯
+    - name: 編譯專案
       run: |
         cd after-school-api
-        if [ ! -f "Cargo.toml" ]; then
-          echo "錯誤：在目前目錄找不到 Cargo.toml"
-          echo "目前目錄內容："
-          ls -la
-          exit 1
-        fi
         cargo build --release --target x86_64-unknown-linux-gnu
     
     - name: 壓縮二進制檔案
       if: success()
-      run: |
-        cd after-school-api/target/x86_64-unknown-linux-gnu/release/
-        BINARY_NAME=$(ls after-school-api* | grep -v '\.d$' | head -n 1)
-        if [ -z "$BINARY_NAME" ]; then
-          echo "錯誤：找不到編譯後的二進制檔案"
-          exit 1
-        fi
-        echo "找到二進制檔案：$BINARY_NAME"
-        tar -czvf ../../../../after-school-api-linux-x64.tar.gz "$BINARY_NAME"
+      env:
+        BINARY_PATH: after-school-api/target/x86_64-unknown-linux-gnu/release/after-school-api
+        OUTPUT_FILE: after-school-api-linux-x64.tar.gz
+      run: tar -czvf $OUTPUT_FILE $BINARY_PATH
     
     - name: 上傳編譯結果
       if: success()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: after-school-api-linux
         path: after-school-api-linux-x64.tar.gz
         retention-days: 5
+        compression-level: 6
     
     - name: 建立發布版本
       if: (success() && (startsWith(github.ref, 'refs/tags/') || github.event.inputs.release_type == 'release'))
