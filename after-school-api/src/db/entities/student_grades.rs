@@ -11,6 +11,16 @@ pub struct Model {
     pub academic_year: i16,
     pub semester: i16,
     pub exam_type: i16,
+    #[sea_orm(column_type = "Text", nullable)]
+    pub chinese_book: Option<String>,
+    #[sea_orm(column_type = "Text", nullable)]
+    pub english_book: Option<String>,
+    #[sea_orm(column_type = "Text", nullable)]
+    pub math_book: Option<String>,
+    #[sea_orm(column_type = "Text", nullable)]
+    pub science_book: Option<String>,
+    #[sea_orm(column_type = "Text", nullable)]
+    pub social_studies_book: Option<String>,
     pub chinese_score: Option<i16>,
     pub english_score: Option<i16>,
     pub math_score: Option<i16>,

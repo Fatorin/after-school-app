@@ -44,11 +44,6 @@ pub async fn add_student(
         home_ownership: Set(payload.home_ownership),
         home_phone_number: Set(payload.home_phone_number),
         mobile_phone_number: Set(payload.mobile_phone_number),
-        chinese_book: Set(payload.chinese_book),
-        english_book: Set(payload.english_book),
-        math_book: Set(payload.math_book),
-        science_book: Set(payload.science_book),
-        social_studies_book: Set(payload.social_studies_book),
         line_id: Set(payload.line_id),
         comment: Set(payload.comment),
         updated_at: Set(Utc::now().naive_utc()),
@@ -116,14 +111,6 @@ pub async fn update_student(
         update_optional_field(
             &mut student.mobile_phone_number,
             payload.mobile_phone_number,
-        );
-        update_optional_field(&mut student.chinese_book, payload.chinese_book);
-        update_optional_field(&mut student.english_book, payload.english_book);
-        update_optional_field(&mut student.math_book, payload.math_book);
-        update_optional_field(&mut student.science_book, payload.science_book);
-        update_optional_field(
-            &mut student.social_studies_book,
-            payload.social_studies_book,
         );
         update_optional_field(&mut student.line_id, payload.line_id);
         update_optional_field(&mut student.comment, payload.comment);

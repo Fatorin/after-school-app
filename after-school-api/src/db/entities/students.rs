@@ -36,16 +36,6 @@ pub struct Model {
     #[sea_orm(column_type = "Text", nullable)]
     pub mobile_phone_number: Option<String>,
     #[sea_orm(column_type = "Text", nullable)]
-    pub chinese_book: Option<String>,
-    #[sea_orm(column_type = "Text", nullable)]
-    pub english_book: Option<String>,
-    #[sea_orm(column_type = "Text", nullable)]
-    pub math_book: Option<String>,
-    #[sea_orm(column_type = "Text", nullable)]
-    pub science_book: Option<String>,
-    #[sea_orm(column_type = "Text", nullable)]
-    pub social_studies_book: Option<String>,
-    #[sea_orm(column_type = "Text", nullable)]
     pub line_id: Option<String>,
     #[sea_orm(column_type = "Text", nullable)]
     pub comment: Option<String>,

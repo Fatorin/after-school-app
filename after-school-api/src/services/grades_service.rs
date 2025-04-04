@@ -38,6 +38,11 @@ pub async fn add_grades(
         academic_year: Set(payload.academic_year),
         semester: Set(payload.semester),
         exam_type: Set(payload.exam_type),
+        chinese_book: Set(payload.chinese_book),
+        english_book: Set(payload.english_book),
+        math_book: Set(payload.math_book),
+        science_book: Set(payload.science_book),
+        social_studies_book: Set(payload.social_studies_book),
         chinese_score: Set(payload.chinese_score),
         english_score: Set(payload.english_score),
         math_score: Set(payload.math_score),
@@ -97,6 +102,14 @@ pub async fn update_grades(
         let mut student_grades: student_grades::ActiveModel = grades.into();
         student_grades.academic_year = Set(payload.academic_year);
         student_grades.semester = Set(payload.semester);
+        update_optional_field(&mut student_grades.chinese_book, payload.chinese_book);
+        update_optional_field(&mut student_grades.english_book, payload.english_book);
+        update_optional_field(&mut student_grades.math_book, payload.math_book);
+        update_optional_field(&mut student_grades.science_book, payload.science_book);
+        update_optional_field(
+            &mut student_grades.social_studies_book,
+            payload.social_studies_book,
+        );
         update_optional_field(&mut student_grades.chinese_score, payload.chinese_score);
         update_optional_field(&mut student_grades.english_score, payload.english_score);
         update_optional_field(&mut student_grades.math_score, payload.math_score);
