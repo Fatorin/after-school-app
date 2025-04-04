@@ -38,7 +38,7 @@ export function createFormStore<T extends z.ZodRawShape>(
     mode: 'create' as ValidationMode,
 
     setMode: (mode) => {
-      set({ 
+      set({
         mode,
         values: defaultValues[mode]
       });
@@ -60,22 +60,22 @@ export function createFormStore<T extends z.ZodRawShape>(
       try {
         const fieldValue = { [field]: value };
         currentSchema.partial().parse(fieldValue);
-        
-        set({ 
-          errors: { 
-            ...errors, 
-            [field]: undefined 
-          } 
+
+        set({
+          errors: {
+            ...errors,
+            [field]: undefined
+          }
         });
         return true;
       } catch (error) {
         if (error instanceof z.ZodError) {
           const fieldError = error.errors[0]?.message || '驗證錯誤';
-          set({ 
-            errors: { 
-              ...errors, 
-              [field]: fieldError 
-            } 
+          set({
+            errors: {
+              ...errors,
+              [field]: fieldError
+            }
           });
         }
         return false;
@@ -87,7 +87,8 @@ export function createFormStore<T extends z.ZodRawShape>(
       const currentSchema = mode === 'create' ? schemas.create : schemas.update;
 
       try {
-        currentSchema.parse(values);
+        const schemaToUse = mode === 'update' ? currentSchema.partial() : currentSchema;
+        schemaToUse.parse(values);
         set({ errors: {}, isValid: true });
         return true;
       } catch (error) {

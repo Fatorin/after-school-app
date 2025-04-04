@@ -8,7 +8,8 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { cn, GetConvertedValue } from "@/lib/utils";
+import { cn } from "@/lib/utils";
+import { GetConvertedValue } from "@/lib/data_convert";
 import { BaseRecord, ColumnConfig } from '@/types/generic_table';
 import { renderField } from "./helper";
 import { z } from "zod";
@@ -61,9 +62,9 @@ export function EditDialog<T extends BaseRecord, S extends z.ZodRawShape>({
     }
   }, [open, record, isNewRecord, setMode, setValues, resetForm]);
 
-  const handleChange = (field: keyof T & keyof InferSchemaType<S>, value: unknown) => {  
-    const column = columns.find(c => c.key === field);  
-    const convertedValue =  GetConvertedValue(column?.type, value);
+  const handleChange = (field: keyof T & keyof InferSchemaType<S>, value: unknown) => {
+    const column = columns.find(c => c.key === field);
+    const convertedValue = GetConvertedValue(column?.type, value);
     setValues({ [field]: convertedValue } as Partial<InferSchemaType<S>>);
     validateField(field);
   };
@@ -86,13 +87,22 @@ export function EditDialog<T extends BaseRecord, S extends z.ZodRawShape>({
   };
 
   const handleClose = () => {
+    console.log("handleClose called");
     resetForm();
     onOpenChange(false);
   };
 
   return (
-    <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-[960px] max-h-[90vh] flex flex-col">
+    <Dialog open={open} onOpenChange={(isOpen) => {
+      if (!isOpen) {
+        handleClose();
+      } else {
+        onOpenChange(true);
+      }
+    }}>
+      <DialogContent
+        className="max-w-[90vw] md:max-w-[80vw] lg:max-w-[1200px] max-h-[90vh] flex flex-col"
+      >
         <DialogHeader className="shrink-0">
           <DialogTitle>
             {isNewRecord ? `新增` : `編輯`}

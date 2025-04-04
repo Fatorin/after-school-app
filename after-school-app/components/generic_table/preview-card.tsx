@@ -9,7 +9,8 @@ import {
 } from '@/components/ui/card';
 import { BaseRecord, ColumnConfig } from '@/types/generic_table';
 import { renderField } from './helper';
-import { cn, GetConvertedValue } from '@/lib/utils';
+import { cn } from "@/lib/utils";
+import { GetConvertedValue } from "@/lib/data_convert";
 import { FormStore } from "@/stores/form-store";
 import { z } from "zod";
 

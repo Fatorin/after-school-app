@@ -21,11 +21,6 @@ export interface Student {
   home_ownership?: string;
   home_phone_number?: string;
   mobile_phone_number?: string;
-  chinese_book?: string,
-  english_book?: string,
-  math_book?: string,
-  science_book?: string,
-  social_studies_book?: string,
   line_id?: string;
   comment?: string;
   joined_at: Date;
@@ -81,13 +76,6 @@ export type StudentSchemaShape = {
   home_ownership: ZodNullable<z.ZodString>;
   home_phone_number: ZodNullable<z.ZodString>;
   mobile_phone_number: ZodNullable<z.ZodString>;
-
-  // 教育相關
-  chinese_book: ZodNullable<z.ZodString>;
-  english_book: ZodNullable<z.ZodString>;
-  math_book: ZodNullable<z.ZodString>;
-  science_book: ZodNullable<z.ZodString>;
-  social_studies_book: ZodNullable<z.ZodString>;
 
   // 其他欄位
   line_id: ZodNullable<z.ZodString>;
@@ -160,11 +148,6 @@ export const studentColumns: ColumnConfig<Student>[] = [
   },
   { key: 'home_phone_number', label: '市話', type: 'text' },
   { key: 'mobile_phone_number', label: '手機', type: 'text' },
-  { key: 'chinese_book', label: '國文', type: 'text' },
-  { key: 'english_book', label: '英文', type: 'text' },
-  { key: 'math_book', label: '數學', type: 'text' },
-  { key: 'science_book', label: '自然', type: 'text' },
-  { key: 'social_studies_book', label: '社會', type: 'text' },
   { key: 'line_id', label: 'LINE ID', type: 'text' },
   { key: 'comment', label: '備註', type: 'text' },
   { key: 'joined_at', label: '加入時間', type: 'date' },

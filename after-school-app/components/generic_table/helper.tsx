@@ -120,7 +120,6 @@ export function renderField<T extends BaseRecord>({
               date={dateValue}
               onChange={(date) => {
                 if (date && isValid(date)) {
-                  // 將日期轉換為 ISO 字串格式
                   onChange?.(date);
                 } else {
                   onChange?.(null);

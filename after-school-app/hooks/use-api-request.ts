@@ -78,7 +78,7 @@ export const useApiRequest = () => {
       }
 
       if (successMessage) {
-        toast.success("successMessage.title", {
+        toast.success(successMessage.title, {
           description: successMessage.description,
         });
       }
