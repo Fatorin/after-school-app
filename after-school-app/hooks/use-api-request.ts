@@ -2,9 +2,9 @@
 'use client'
 
 import { useCallback } from 'react';
-import { toast } from './use-toast';
+import { toast } from "sonner";
 import { DateFieldsMap } from '@/types/common';
-import { convertDates } from '@/lib/utils';
+import { convertDates } from '@/lib/data_convert';
 
 const BASE_API_CONFIG = {
   headers: {
@@ -78,17 +78,14 @@ export const useApiRequest = () => {
       }
 
       if (successMessage) {
-        toast({
-          title: successMessage.title,
+        toast.success("successMessage.title", {
           description: successMessage.description,
         });
       }
 
       return data;
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "錯誤",
+      toast.error("錯誤", {
         description: error instanceof Error ? error.message : "操作失敗",
       });
       throw error;

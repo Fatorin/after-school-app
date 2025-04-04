@@ -93,7 +93,7 @@ export function EditDialog<T extends BaseRecord, S extends z.ZodRawShape>({
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="max-w-[960px] max-h-[90vh] flex flex-col">
-        <DialogHeader className="flex-shrink-0">
+        <DialogHeader className="shrink-0">
           <DialogTitle>
             {isNewRecord ? `新增` : `編輯`}
           </DialogTitle>
@@ -128,7 +128,7 @@ export function EditDialog<T extends BaseRecord, S extends z.ZodRawShape>({
           </div>
         </div>
 
-        <DialogFooter className="flex-shrink-0 gap-2 mt-6 pt-4 border-t">
+        <DialogFooter className="shrink-0 gap-2 mt-6 pt-4 border-t">
           <Button variant="outline" onClick={handleClose}>
             取消
           </Button>

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,12 +14,11 @@ export default function LoginForm() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { toast } = useToast();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    
+
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/login`, {
         method: 'POST',
@@ -31,27 +30,22 @@ export default function LoginForm() {
       });
 
       if (response.ok) {
-        toast({
-          title: "登入成功",
+        toast.success("登入成功", {
           description: "正在為您導向頁面...",
         });
-        
+
         const from = searchParams.get('from');
         router.push(from || '/');
         router.refresh();
       } else {
         const data = await response.json();
-        toast({
-          variant: "destructive",
-          title: "登入失敗",
+        toast.error("登入失敗", {
           description: data.message || "請檢查您的帳號密碼是否正確",
         });
       }
     } catch (error) {
       console.error('登入錯誤:', error);
-      toast({
-        variant: "destructive",
-        title: "系統錯誤",
+      toast.error("系統錯誤", {
         description: "無法連接到伺服器，請稍後再試",
       });
     } finally {
@@ -66,7 +60,7 @@ export default function LoginForm() {
           歡迎回來
         </CardTitle>
       </CardHeader>
-      
+
       <CardContent>
         <form onSubmit={handleLogin} className="space-y-6">
           <div className="space-y-2">
@@ -81,7 +75,7 @@ export default function LoginForm() {
               disabled={isLoading}
             />
           </div>
-          
+
           <div className="space-y-2">
             <Label htmlFor="password">密碼</Label>
             <Input
