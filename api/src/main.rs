@@ -1,5 +1,5 @@
-use after_school_api::config::CONFIG;
-use after_school_api::{db, routes};
+use church_community_center_api::config::CONFIG;
+use church_community_center_api::{db, routes};
 use tracing::info;
 use std::net::SocketAddr;
 

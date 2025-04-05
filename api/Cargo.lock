@@ -18,29 +18,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "512761e0bb2578dd7380c6baaa0f4ce03e84f95e960231d1dec8bf4d7d6e2627"
 
 [[package]]
-name = "after-school-api"
-version = "0.1.0"
-dependencies = [
- "axum",
- "bcrypt",
- "chrono",
- "jsonwebtoken",
- "log",
- "sea-orm",
- "serde",
- "serde_yml",
- "shellexpand",
- "tokio",
- "tower",
- "tower-cookies",
- "tower-http",
- "tracing",
- "tracing-subscriber",
- "uuid",
- "validator",
-]
-
-[[package]]
 name = "ahash"
 version = "0.7.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -410,6 +387,29 @@ dependencies = [
  "serde",
  "wasm-bindgen",
  "windows-targets 0.52.6",
+]
+
+[[package]]
+name = "church-community-center-api"
+version = "0.1.0"
+dependencies = [
+ "axum",
+ "bcrypt",
+ "chrono",
+ "jsonwebtoken",
+ "log",
+ "sea-orm",
+ "serde",
+ "serde_yml",
+ "shellexpand",
+ "tokio",
+ "tower",
+ "tower-cookies",
+ "tower-http",
+ "tracing",
+ "tracing-subscriber",
+ "uuid",
+ "validator",
 ]
 
 [[package]]
