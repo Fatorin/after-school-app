@@ -64,7 +64,7 @@ pub async fn add_attendance_record(
 
     let record = attendance_records::ActiveModel {
         id: Set(id),
-        class_date: Set(parsed_date),
+        date: Set(parsed_date),
         note: Set(None),
         created_at: Set(Utc::now().naive_utc()),
         updated_at: Set(Utc::now().naive_utc()),

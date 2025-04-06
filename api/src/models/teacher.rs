@@ -1,58 +1,55 @@
-use crate::db::entities::teachers;
-use chrono::{TimeZone, Utc};
-use sea_orm::prelude::DateTimeWithTimeZone;
+use crate::db::entities::{members, teachers};
+use crate::models::MemberDto;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 use validator::Validate;
 
-#[derive(Debug, Deserialize, Validate)]
-pub struct UpsertTeacherRequest {
-    pub employment_type: EmploymentType,
+#[derive(Debug, Serialize, Deserialize, Validate)]
+pub struct AddTeacherRequest {
+    pub member_id: Option<Uuid>,
     #[validate(length(min = 4, message = "使用者名稱至少需要4個字元"))]
-    pub username: Option<String>,
+    pub username: String,
     #[validate(length(min = 8, message = "密碼至少需要8個字元"))]
-    pub password: Option<String>,
-    #[validate(length(min = 2, message = "名稱至少需要2個字元"))]
-    pub name: String,
-    pub phone: Option<String>,
+    pub password: String,
+    pub employment_type: EmploymentType,
     pub responsibility: Option<String>,
     pub background: Option<String>,
-    pub id_number: Option<String>,
-    pub date_of_birth: Option<DateTimeWithTimeZone>,
+    #[serde(flatten)]
+    pub member_dto: MemberDto,
+}
+
+#[derive(Debug, Deserialize, Validate)]
+pub struct UpdateTeacherRequest {
+    #[validate(length(min = 8, message = "密碼至少需要8個字元"))]
+    pub password: Option<String>,
+    pub employment_type: EmploymentType,
+    pub responsibility: Option<String>,
+    pub background: Option<String>,
+    #[serde(flatten)]
+    pub member_dto: MemberDto,
 }
 
 #[derive(Debug, Serialize)]
 pub struct TeacherView {
-    pub id: Uuid,
+    pub member_id: Uuid,
     pub username: String,
-    pub role_type: RoleType,
-    pub employment_type: i16,
-    pub name: String,
-    pub phone: Option<String>,
+    pub employment_type: EmploymentType,
     pub responsibility: Option<String>,
     pub background: Option<String>,
-    pub id_number: Option<String>,
-    pub date_of_birth: Option<DateTimeWithTimeZone>,
+    #[serde(flatten)]
+    pub member_dto: MemberDto,
 }
 
-impl TryFrom<teachers::Model> for TeacherView {
-    type Error = String;
-
-    fn try_from(teacher: teachers::Model) -> Result<Self, Self::Error> {
-        Ok(TeacherView {
-            id: teacher.id,
-            username: teacher.username,
-            role_type: RoleType::try_from(teacher.role_type).map_err(|e| e.to_string())?,
-            employment_type: teacher.employment_type,
-            name: teacher.name,
-            phone: teacher.phone,
-            responsibility: teacher.responsibility,
-            background: teacher.background,
-            id_number: teacher.id_number,
-            date_of_birth: teacher
-                .date_of_birth
-                .map(|dt| Utc.from_utc_datetime(&dt).into()),
-        })
+pub fn teacher_and_member_to_view(teacher: teachers::Model, member: members::Model) -> TeacherView {
+    let member_id = member.id;
+    let member_dto = MemberDto::from(member);
+    TeacherView {
+        member_id,
+        username: teacher.username,
+        employment_type: EmploymentType::from(teacher.employment_type),
+        responsibility: teacher.responsibility,
+        background: teacher.background,
+        member_dto,
     }
 }
 
@@ -112,10 +109,4 @@ impl From<EmploymentType> for i16 {
             EmploymentType::Volunteer => 2,
         }
     }
-}
-
-#[derive(Debug, Serialize)]
-pub struct TeacherInfo {
-    pub id: Uuid,
-    pub name: String,
 }

@@ -3,6 +3,10 @@
 pub use super::announcements::Entity as Announcements;
 pub use super::attendance_records::Entity as AttendanceRecords;
 pub use super::attendance_students::Entity as AttendanceStudents;
-pub use super::student_grades::Entity as StudentGrades;
+pub use super::member_family_relations::Entity as MemberFamilyRelations;
+pub use super::members::Entity as Members;
+pub use super::student_exams::Entity as StudentExams;
+pub use super::student_infos::Entity as StudentInfos;
 pub use super::students::Entity as Students;
+pub use super::teacher_assignments::Entity as TeacherAssignments;
 pub use super::teachers::Entity as Teachers;

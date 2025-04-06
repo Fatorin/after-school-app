@@ -3,30 +3,39 @@
 use sea_orm::entity::prelude::*;
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq)]
-#[sea_orm(table_name = "announcements")]
+#[sea_orm(table_name = "teacher_assignments")]
 pub struct Model {
     #[sea_orm(primary_key, auto_increment = false)]
-    pub id: Uuid,
-    pub publisher_id: Uuid,
-    #[sea_orm(column_type = "Text")]
-    pub title: String,
-    #[sea_orm(column_type = "Text")]
-    pub content: String,
-    pub created_at: DateTime,
-    pub updated_at: DateTime,
-    pub deleted_at: Option<DateTime>,
+    pub teacher_id: Uuid,
+    #[sea_orm(primary_key, auto_increment = false)]
+    pub student_id: Uuid,
+    pub assigned_at: DateTime,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
     #[sea_orm(
+        belongs_to = "super::students::Entity",
+        from = "Column::StudentId",
+        to = "super::students::Column::MemberId",
+        on_update = "NoAction",
+        on_delete = "Cascade"
+    )]
+    Students,
+    #[sea_orm(
         belongs_to = "super::teachers::Entity",
-        from = "Column::PublisherId",
+        from = "Column::TeacherId",
         to = "super::teachers::Column::MemberId",
         on_update = "NoAction",
         on_delete = "Cascade"
     )]
     Teachers,
+}
+
+impl Related<super::students::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::Students.def()
+    }
 }
 
 impl Related<super::teachers::Entity> for Entity {

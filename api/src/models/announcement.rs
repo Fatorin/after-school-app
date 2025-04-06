@@ -14,7 +14,7 @@ pub struct UpsertAnnouncementRequest {
 #[derive(Debug, Serialize)]
 pub struct AnnouncementView {
     pub id: Uuid,
-    pub teacher_name: String,
+    pub name: String,
     pub title: String,
     pub content: String,
     pub updated_at: DateTimeWithTimeZone,
@@ -24,11 +24,11 @@ impl TryFrom<(announcements::Model, String)> for AnnouncementView {
     type Error = String;
 
     fn try_from(
-        (model, teacher_name): (announcements::Model, String),
+        (model, name): (announcements::Model, String),
     ) -> Result<Self, Self::Error> {
         Ok(AnnouncementView {
             id: model.id,
-            teacher_name,
+            name,
             title: model.title,
             content: model.content,
             updated_at: Utc.from_utc_datetime(&model.updated_at).into(),

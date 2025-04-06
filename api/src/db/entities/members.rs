@@ -3,51 +3,50 @@
 use sea_orm::entity::prelude::*;
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq)]
-#[sea_orm(table_name = "student_grades")]
+#[sea_orm(table_name = "members")]
 pub struct Model {
     #[sea_orm(primary_key, auto_increment = false)]
     pub id: Uuid,
-    pub student_id: Uuid,
-    pub academic_year: i16,
-    pub semester: i16,
-    pub exam_type: i16,
+    #[sea_orm(column_type = "Text")]
+    pub name: String,
+    pub gender: Option<i16>,
+    #[sea_orm(column_type = "Text", nullable, unique)]
+    pub id_number: Option<String>,
+    pub birth_date: Option<DateTime>,
     #[sea_orm(column_type = "Text", nullable)]
-    pub chinese_book: Option<String>,
+    pub home_phone_number: Option<String>,
     #[sea_orm(column_type = "Text", nullable)]
-    pub english_book: Option<String>,
+    pub mobile_phone_number: Option<String>,
     #[sea_orm(column_type = "Text", nullable)]
-    pub math_book: Option<String>,
+    pub address: Option<String>,
     #[sea_orm(column_type = "Text", nullable)]
-    pub science_book: Option<String>,
+    pub title: Option<String>,
     #[sea_orm(column_type = "Text", nullable)]
-    pub social_studies_book: Option<String>,
-    pub chinese_score: Option<i16>,
-    pub english_score: Option<i16>,
-    pub math_score: Option<i16>,
-    pub science_score: Option<i16>,
-    pub social_studies_score: Option<i16>,
+    pub line_id: Option<String>,
     #[sea_orm(column_type = "Text", nullable)]
     pub comment: Option<String>,
+    pub joined_at: DateTime,
     pub created_at: DateTime,
     pub updated_at: DateTime,
-    pub deleted_at: Option<DateTime>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
-    #[sea_orm(
-        belongs_to = "super::students::Entity",
-        from = "Column::StudentId",
-        to = "super::students::Column::MemberId",
-        on_update = "NoAction",
-        on_delete = "Cascade"
-    )]
+    #[sea_orm(has_one = "super::students::Entity")]
     Students,
+    #[sea_orm(has_one = "super::teachers::Entity")]
+    Teachers,
 }
 
 impl Related<super::students::Entity> for Entity {
     fn to() -> RelationDef {
         Relation::Students.def()
+    }
+}
+
+impl Related<super::teachers::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::Teachers.def()
     }
 }
 

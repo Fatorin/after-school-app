@@ -1,5 +1,5 @@
 use crate::config::CONFIG;
-use crate::services::{add_announcement, add_attendance_record, add_grades, add_student, add_teacher, delete_announcement, delete_grades, delete_student, delete_teacher, get_announcements, get_attendance_record, get_grades, get_students, get_teachers, login_handler, logout_handler, me_handler, update_announcement, update_attendance, update_grades, update_student, update_teacher};
+use crate::services::prelude::*;
 use crate::util;
 use axum::body::Body;
 use axum::http::{header, HeaderValue, Method, Request, StatusCode};
@@ -26,12 +26,12 @@ pub fn new_route(db: DatabaseConnection) -> Router {
 
     let protected_routes = Router::new()
         .route("/me", get(me_handler))
+        .route("/members", get(get_members).post(add_member))
+        .route("/members/{id}", put(update_member))
         .route("/teachers", get(get_teachers).post(add_teacher))
         .route("/teachers/{id}", put(update_teacher).delete(delete_teacher))
         .route("/students", get(get_students).post(add_student))
         .route("/students/{id}", put(update_student).delete(delete_student))
-        .route("/grades", get(get_grades).post(add_grades))
-        .route("/grades/{id}", put(update_grades).delete(delete_grades))
         .route(
             "/announcements",
             get(get_announcements).post(add_announcement),

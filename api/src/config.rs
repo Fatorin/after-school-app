@@ -35,6 +35,7 @@ pub struct LoggerConfig {
 #[derive(Debug, Deserialize, Clone)]
 pub struct AuthConfig {
     pub jwt_secret: String,
+    pub default_name: String,
     pub default_username: String,
     pub default_password: String,
 }

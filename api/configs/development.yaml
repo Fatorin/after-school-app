@@ -8,7 +8,7 @@ server:
 database:
   host: localhost
   port: 5432
-  name: after-school-app
+  name: church-community-center
   user: postgres
   password: postgres
 
@@ -18,5 +18,6 @@ logger:
 
 auth:
   jwt_secret: this_is_a_temp_secret
+  default_name: "管理員"
   default_username: admin
   default_password: password

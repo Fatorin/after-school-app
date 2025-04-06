@@ -1,4 +1,4 @@
-use crate::db::entities::{announcements, teachers};
+use crate::db::entities::{announcements, members, teachers};
 use crate::models::{AnnouncementView, AppResponse, RoleType, UpsertAnnouncementRequest};
 use crate::util::Claims;
 use axum::extract::{Path, State};
@@ -19,7 +19,7 @@ pub async fn add_announcement(
 ) -> Result<Json<AppResponse>, (StatusCode, Json<AppResponse>)> {
     let new_announcement = announcements::ActiveModel {
         id: Default::default(),
-        teacher_id: Set(claims.sub.clone()),
+        publisher_id: Set(claims.sub.clone()),
         title: Set(payload.title),
         content: Set(payload.content),
         ..Default::default()
@@ -38,7 +38,7 @@ pub async fn get_announcements(
 ) -> Result<Json<AppResponse<Vec<AnnouncementView>>>, (StatusCode, Json<AppResponse>)> {
     let announcements = announcements::Entity::find()
         .join(JoinType::InnerJoin, announcements::Relation::Teachers.def())
-        .select_also(teachers::Entity)
+        .select_also(members::Entity)
         .filter(announcements::Column::DeletedAt.is_null())
         .all(&db)
         .await
@@ -46,8 +46,8 @@ pub async fn get_announcements(
 
     let result: Vec<AnnouncementView> = announcements
         .into_iter()
-        .map(|(announcement, teacher)| {
-            AnnouncementView::try_from((announcement, teacher.unwrap().name))
+        .map(|(announcement, member)| {
+            AnnouncementView::try_from((announcement, member.unwrap().name))
         })
         .collect::<Result<_, _>>()
         .map_err(|_| AppResponse::error(StatusCode::INTERNAL_SERVER_ERROR, "資料轉換出現異常"))?;
@@ -62,7 +62,7 @@ pub async fn update_announcement(
     Json(payload): Json<UpsertAnnouncementRequest>,
 ) -> Result<Json<AppResponse<AnnouncementView>>, (StatusCode, Json<AppResponse>)> {
     if let Some(announcement) = find_announcement_by_id(&db, announcement_id).await? {
-        check_permission(claims.sub, announcement.teacher_id, claims.role)?;
+        check_permission(claims.sub, announcement.publisher_id, claims.role)?;
 
         let mut announcement: announcements::ActiveModel = announcement.into();
         announcement.title = Set(payload.title);
@@ -74,20 +74,19 @@ pub async fn update_announcement(
             .await
             .map_err(|_| AppResponse::error(StatusCode::INTERNAL_SERVER_ERROR, "更新失敗"))?;
 
-        let teacher_name = teachers::Entity::find()
-            .filter(teachers::Column::Id.eq(announcement.teacher_id))
+        let name = teachers::Entity::find()
+            .filter(members::Column::Id.eq(announcement.publisher_id))
             .select_only()
-            .column(teachers::Column::Name)
+            .column(members::Column::Name)
             .into_tuple::<String>() // 改用 into_tuple
             .one(&db)
             .await
             .map_err(|_| AppResponse::error(StatusCode::INTERNAL_SERVER_ERROR, "查詢教師失敗"))?
             .ok_or_else(|| AppResponse::error(StatusCode::BAD_REQUEST, "找不到對應的教師"))?;
 
-        let announcement_view =
-            AnnouncementView::try_from((announcement, teacher_name)).map_err(|_| {
-                AppResponse::error(StatusCode::INTERNAL_SERVER_ERROR, "資料轉換出現異常")
-            })?;
+        let announcement_view = AnnouncementView::try_from((announcement, name)).map_err(|_| {
+            AppResponse::error(StatusCode::INTERNAL_SERVER_ERROR, "資料轉換出現異常")
+        })?;
 
         return Ok(AppResponse::success_with_data(announcement_view));
     }
@@ -104,7 +103,7 @@ pub async fn delete_announcement(
     Path(announcement_id): Path<Uuid>,
 ) -> Result<Json<AppResponse>, (StatusCode, Json<AppResponse>)> {
     if let Some(announcement) = find_announcement_by_id(&db, announcement_id).await? {
-        check_permission(claims.sub, announcement.teacher_id, claims.role)?;
+        check_permission(claims.sub, announcement.publisher_id, claims.role)?;
 
         let mut announcement: announcements::ActiveModel = announcement.into();
         announcement.updated_at = Set(Utc::now().naive_utc());

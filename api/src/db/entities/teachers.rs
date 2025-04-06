@@ -6,24 +6,17 @@ use sea_orm::entity::prelude::*;
 #[sea_orm(table_name = "teachers")]
 pub struct Model {
     #[sea_orm(primary_key, auto_increment = false)]
-    pub id: Uuid,
+    pub member_id: Uuid,
     #[sea_orm(column_type = "Text")]
     pub username: String,
     #[sea_orm(column_type = "Text")]
     pub password: String,
     pub role_type: i16,
     pub employment_type: i16,
-    #[sea_orm(column_type = "Text")]
-    pub name: String,
-    #[sea_orm(column_type = "Text", nullable)]
-    pub phone: Option<String>,
     #[sea_orm(column_type = "Text", nullable)]
     pub responsibility: Option<String>,
     #[sea_orm(column_type = "Text", nullable)]
     pub background: Option<String>,
-    #[sea_orm(column_type = "Text", nullable)]
-    pub id_number: Option<String>,
-    pub date_of_birth: Option<DateTime>,
     pub created_at: DateTime,
     pub updated_at: DateTime,
     pub deleted_at: Option<DateTime>,
@@ -34,11 +27,42 @@ pub struct Model {
 pub enum Relation {
     #[sea_orm(has_many = "super::announcements::Entity")]
     Announcements,
+    #[sea_orm(
+        belongs_to = "super::members::Entity",
+        from = "Column::MemberId",
+        to = "super::members::Column::Id",
+        on_update = "NoAction",
+        on_delete = "Cascade"
+    )]
+    Members,
+    #[sea_orm(has_many = "super::teacher_assignments::Entity")]
+    TeacherAssignments,
 }
 
 impl Related<super::announcements::Entity> for Entity {
     fn to() -> RelationDef {
         Relation::Announcements.def()
+    }
+}
+
+impl Related<super::members::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::Members.def()
+    }
+}
+
+impl Related<super::teacher_assignments::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::TeacherAssignments.def()
+    }
+}
+
+impl Related<super::students::Entity> for Entity {
+    fn to() -> RelationDef {
+        super::teacher_assignments::Relation::Students.def()
+    }
+    fn via() -> Option<RelationDef> {
+        Some(super::teacher_assignments::Relation::Teachers.def().rev())
     }
 }
 

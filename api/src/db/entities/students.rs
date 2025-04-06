@@ -6,17 +6,14 @@ use sea_orm::entity::prelude::*;
 #[sea_orm(table_name = "students")]
 pub struct Model {
     #[sea_orm(primary_key, auto_increment = false)]
-    pub id: Uuid,
-    #[sea_orm(column_type = "Text")]
-    pub name: String,
-    pub gender: Option<i16>,
-    #[sea_orm(column_type = "Text")]
-    pub id_number: String,
-    pub date_of_birth: Option<DateTime>,
+    pub member_id: Uuid,
     #[sea_orm(column_type = "Text", nullable)]
     pub school_name: Option<String>,
     pub grade: Option<i16>,
+    pub night_class: Option<bool>,
     pub is_pg: Option<bool>,
+    #[sea_orm(column_type = "Text", nullable)]
+    pub pagamo_account: Option<String>,
     #[sea_orm(column_type = "Text", nullable)]
     pub description: Option<String>,
     #[sea_orm(column_type = "Text", nullable)]
@@ -28,18 +25,8 @@ pub struct Model {
     pub occupation: Option<String>,
     #[sea_orm(column_type = "Text", nullable)]
     pub subsidy: Option<String>,
-    #[sea_orm(column_type = "Text", nullable)]
-    pub address: Option<String>,
     pub home_ownership: Option<i16>,
-    #[sea_orm(column_type = "Text", nullable)]
-    pub home_phone_number: Option<String>,
-    #[sea_orm(column_type = "Text", nullable)]
-    pub mobile_phone_number: Option<String>,
-    #[sea_orm(column_type = "Text", nullable)]
-    pub line_id: Option<String>,
-    #[sea_orm(column_type = "Text", nullable)]
-    pub comment: Option<String>,
-    pub joined_at: DateTime,
+    pub class_joined_at: DateTime,
     pub created_at: DateTime,
     pub updated_at: DateTime,
     pub deleted_at: Option<DateTime>,
@@ -49,8 +36,18 @@ pub struct Model {
 pub enum Relation {
     #[sea_orm(has_many = "super::attendance_students::Entity")]
     AttendanceStudents,
-    #[sea_orm(has_many = "super::student_grades::Entity")]
-    StudentGrades,
+    #[sea_orm(
+        belongs_to = "super::members::Entity",
+        from = "Column::MemberId",
+        to = "super::members::Column::Id",
+        on_update = "NoAction",
+        on_delete = "Cascade"
+    )]
+    Members,
+    #[sea_orm(has_many = "super::student_infos::Entity")]
+    StudentInfos,
+    #[sea_orm(has_many = "super::teacher_assignments::Entity")]
+    TeacherAssignments,
 }
 
 impl Related<super::attendance_students::Entity> for Entity {
@@ -59,9 +56,21 @@ impl Related<super::attendance_students::Entity> for Entity {
     }
 }
 
-impl Related<super::student_grades::Entity> for Entity {
+impl Related<super::members::Entity> for Entity {
     fn to() -> RelationDef {
-        Relation::StudentGrades.def()
+        Relation::Members.def()
+    }
+}
+
+impl Related<super::student_infos::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::StudentInfos.def()
+    }
+}
+
+impl Related<super::teacher_assignments::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::TeacherAssignments.def()
     }
 }
 
@@ -71,6 +80,15 @@ impl Related<super::attendance_records::Entity> for Entity {
     }
     fn via() -> Option<RelationDef> {
         Some(super::attendance_students::Relation::Students.def().rev())
+    }
+}
+
+impl Related<super::teachers::Entity> for Entity {
+    fn to() -> RelationDef {
+        super::teacher_assignments::Relation::Teachers.def()
+    }
+    fn via() -> Option<RelationDef> {
+        Some(super::teacher_assignments::Relation::Students.def().rev())
     }
 }
 

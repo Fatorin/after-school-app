@@ -1,4 +1,4 @@
-use crate::db::entities::teachers;
+use crate::db::entities::{members, teachers};
 use crate::models::{AppResponse, LoginRequest, MeResponse, RoleType};
 use crate::util::{create_token, Claims};
 use axum::extract::State;
@@ -28,8 +28,11 @@ pub async fn login_handler(
             .map_err(|_| AppResponse::error(StatusCode::INTERNAL_SERVER_ERROR, "伺服器發生異常"))?;
 
         if is_valid {
-            let token = create_token(teacher.id, RoleType::try_from(teacher.role_type).unwrap())
-                .map_err(|status_code| AppResponse::error(status_code, "伺服器發生異常"))?;
+            let token = create_token(
+                teacher.member_id,
+                RoleType::try_from(teacher.role_type).unwrap(),
+            )
+            .map_err(|status_code| AppResponse::error(status_code, "伺服器發生異常"))?;
 
             let mut cookie = Cookie::new("auth_token", token);
             cookie.set_http_only(true);
@@ -53,9 +56,10 @@ pub async fn me_handler(
     Extension(claims): Extension<Claims>,
     State(db): State<DatabaseConnection>,
 ) -> Result<Json<AppResponse<MeResponse>>, (StatusCode, Json<AppResponse>)> {
-    let teacher = teachers::Entity::find()
-        .filter(teachers::Column::Id.eq(claims.sub))
+    let teacher_with_member = teachers::Entity::find()
+        .filter(teachers::Column::MemberId.eq(claims.sub))
         .filter(teachers::Column::DeletedAt.is_null())
+        .find_also_related(members::Entity)
         .one(&db)
         .await
         .map_err(|e| {
@@ -63,21 +67,30 @@ pub async fn me_handler(
             AppResponse::error(StatusCode::INTERNAL_SERVER_ERROR, "伺服器發生異常")
         })?;
 
-    if let Some(teacher) = teacher {
-        let resp = MeResponse::new(
-            teacher.id,
-            teacher.username,
-            teacher.name,
-            RoleType::try_from(teacher.role_type).unwrap(),
-            claims.exp,
-        );
+    match teacher_with_member {
+        Some((teacher, member_opt)) => {
+            let member_name = member_opt
+                .map(|m| m.name)
+                .unwrap_or_else(|| "未提供姓名".to_string());
 
-        Ok(AppResponse::success_with_data(resp))
-    } else {
-        Err(AppResponse::error(
-            StatusCode::UNAUTHORIZED,
-            "請檢查登入是否成功",
-        ))
+            let resp = MeResponse::new(
+                teacher.member_id,
+                teacher.username,
+                member_name,
+                RoleType::try_from(teacher.role_type).map_err(|_| {
+                    AppResponse::error(StatusCode::INTERNAL_SERVER_ERROR, "無效的角色類型")
+                })?,
+                claims.exp,
+            );
+
+            Ok(AppResponse::success_with_data(resp))
+        }
+        None => {
+            Err(AppResponse::error(
+                StatusCode::UNAUTHORIZED,
+                "請檢查登入是否成功",
+            ))
+        }
     }
 }
 
