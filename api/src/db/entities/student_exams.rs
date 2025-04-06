@@ -6,9 +6,10 @@ use sea_orm::entity::prelude::*;
 #[sea_orm(table_name = "student_exams")]
 pub struct Model {
     #[sea_orm(primary_key, auto_increment = false)]
-    pub id: Uuid,
     pub student_infos_id: Uuid,
+    #[sea_orm(primary_key, auto_increment = false)]
     pub semester: i16,
+    #[sea_orm(primary_key, auto_increment = false)]
     pub exam_type: i16,
     pub chinese_score: Option<i16>,
     pub english_score: Option<i16>,

@@ -101,7 +101,6 @@ CREATE TABLE student_infos
 
 CREATE TABLE student_exams
 (
-    id                   UUID PRIMARY KEY   DEFAULT gen_random_uuid_v7(),
     student_infos_id     UUID      NOT NULL,
     semester             int2      NOT NULL,
     exam_type            int2      NOT NULL,
@@ -112,7 +111,7 @@ CREATE TABLE student_exams
     social_studies_score int2,
     created_at           TIMESTAMP NOT NULL DEFAULT timezone('utc', now()),
     updated_at           TIMESTAMP NOT NULL DEFAULT timezone('utc', now()),
-    CONSTRAINT uq_student_exams_unique UNIQUE (student_infos_id, semester, exam_type),
+    CONSTRAINT pk_student_exams PRIMARY KEY (student_infos_id, semester, exam_type),
     CONSTRAINT fk_student_infos_id FOREIGN KEY (student_infos_id) REFERENCES student_infos (id) ON DELETE CASCADE
 );
 

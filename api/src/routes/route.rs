@@ -33,6 +33,14 @@ pub fn new_route(db: DatabaseConnection) -> Router {
         .route("/students", get(get_students).post(add_student))
         .route("/students/{id}", put(update_student).delete(delete_student))
         .route(
+            "/student_infos",
+            get(get_student_infos).post(add_student_infos),
+        )
+        .route(
+            "/student_infos/{id}",
+            put(update_student_infos).delete(delete_student_infos),
+        )
+        .route(
             "/announcements",
             get(get_announcements).post(add_announcement),
         )
