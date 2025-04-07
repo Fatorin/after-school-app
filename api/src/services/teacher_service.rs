@@ -70,6 +70,16 @@ pub async fn add_teacher(
         ));
     }
 
+    if find_teacher_by_username(&db, &payload.username)
+        .await?
+        .is_some()
+    {
+        return Err(AppResponse::error(
+            StatusCode::BAD_REQUEST,
+            format!("帳號 {} 已被使用，請換成別的名字。", payload.username),
+        ));
+    }
+
     let txn = db
         .begin()
         .await
@@ -94,6 +104,11 @@ pub async fn add_teacher(
     };
 
     new_teacher.insert(&txn).await.map_err(|e| {
+        error!("{}", e);
+        AppResponse::error(StatusCode::INTERNAL_SERVER_ERROR, "伺服器發生異常")
+    })?;
+
+    txn.commit().await.map_err(|e| {
         error!("{}", e);
         AppResponse::error(StatusCode::INTERNAL_SERVER_ERROR, "伺服器發生異常")
     })?;
@@ -208,7 +223,22 @@ async fn find_teacher_by_id(
         .one(db)
         .await
         .map_err(|e| {
-            error!("{}", e);
+            error!("find_teacher_by_id error:{}", e);
+            AppResponse::error(StatusCode::INTERNAL_SERVER_ERROR, "資料庫異常")
+        })
+}
+
+async fn find_teacher_by_username(
+    db: &DatabaseConnection,
+    username: &String,
+) -> Result<Option<teachers::Model>, (StatusCode, Json<AppResponse>)> {
+    teachers::Entity::find()
+        .filter(teachers::Column::Username.eq(username))
+        .filter(teachers::Column::DeletedAt.is_null())
+        .one(db)
+        .await
+        .map_err(|e| {
+            error!("find_teacher_by_username error:{}", e);
             AppResponse::error(StatusCode::INTERNAL_SERVER_ERROR, "資料庫異常")
         })
 }

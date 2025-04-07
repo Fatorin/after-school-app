@@ -1,6 +1,6 @@
 use crate::db::entities::members;
 use chrono::{TimeZone, Utc};
-use sea_orm::prelude::{DateTime, DateTimeWithTimeZone};
+use sea_orm::prelude::DateTimeWithTimeZone;
 use serde::{Deserialize, Serialize};
 use validator::Validate;
 
@@ -11,7 +11,7 @@ pub struct MemberDto {
     #[validate(length(min = 10, message = "身份證格式不正確"))]
     pub id_number: Option<String>,
     pub gender: Option<i16>,
-    pub birth_date: Option<DateTime>,
+    pub birth_date: Option<DateTimeWithTimeZone>,
     pub home_phone_number: Option<String>,
     pub mobile_phone_number: Option<String>,
     pub address: Option<String>,
@@ -39,7 +39,9 @@ impl From<members::Model> for MemberDto {
             name: member.name,
             id_number: member.id_number,
             gender: member.gender,
-            birth_date: member.birth_date,
+            birth_date: member
+                .birth_date
+                .map(|birth_date| Utc.from_utc_datetime(&birth_date).into()),
             home_phone_number: member.home_phone_number,
             mobile_phone_number: member.mobile_phone_number,
             address: member.address,

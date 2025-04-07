@@ -18,6 +18,6 @@ bcrypt = "0.17.0"
 tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
 log = "0.4.22"
 validator = { version = "0.20.0", features = ["derive"] }
-chrono = "0.4.40"
+chrono = { version = "0.4.40", features = ["serde"] }
 uuid = { version = "1.16.0", features = ["serde", "v7"] }
 tracing = "0.1.41"

@@ -56,7 +56,7 @@ pub async fn add_member(
         name: Set(payload.member_dto.name),
         gender: Set(payload.member_dto.gender),
         id_number: Set(payload.member_dto.id_number),
-        birth_date: Set(payload.member_dto.birth_date),
+        birth_date: Set(payload.member_dto.birth_date.map(|d| d.naive_utc().into())),
         home_phone_number: Set(payload.member_dto.home_phone_number),
         mobile_phone_number: Set(payload.member_dto.mobile_phone_number),
         address: Set(payload.member_dto.address),
@@ -143,7 +143,7 @@ where
             member.name = Set(dto.name);
             member.gender = Set(dto.gender);
             member.id_number = Set(dto.id_number);
-            member.birth_date = Set(dto.birth_date);
+            member.birth_date = Set(dto.birth_date.map(|d| d.naive_utc().into()));
             member.home_phone_number = Set(dto.home_phone_number);
             member.mobile_phone_number = Set(dto.mobile_phone_number);
             member.address = Set(dto.address);
@@ -166,7 +166,7 @@ where
                 name: Set(dto.name),
                 gender: Set(dto.gender),
                 id_number: Set(dto.id_number),
-                birth_date: Set(dto.birth_date),
+                birth_date: Set(dto.birth_date.map(|d| d.naive_utc().into())),
                 home_phone_number: Set(dto.home_phone_number),
                 mobile_phone_number: Set(dto.mobile_phone_number),
                 address: Set(dto.address),
