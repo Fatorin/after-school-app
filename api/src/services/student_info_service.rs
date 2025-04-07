@@ -1,14 +1,13 @@
-use crate::db::entities::{members, student_exams, student_infos};
+use crate::db::entities::{student_exams, student_infos};
 use crate::models::{
     AppResponse, StudentExamDto, StudentInfoDto, StudentInfoView, UpsertStudentInfoRequest,
 };
-use crate::services::member_service::find_member_by_id;
+use crate::services::member_service::{find_member_by_id, get_members_name_hashmap};
 use axum::extract::{Path, State};
 use axum::http::StatusCode;
 use axum::Json;
 use sea_orm::{ActiveModelTrait, QueryFilter, Set, TransactionTrait};
 use sea_orm::{ColumnTrait, DatabaseConnection, EntityTrait};
-use std::collections::HashMap;
 use uuid::Uuid;
 use validator::Validate;
 
@@ -26,14 +25,7 @@ pub async fn get_student_infos(
         .map(|(info, _)| info.student_id)
         .collect();
 
-    let members_list = members::Entity::find()
-        .filter(members::Column::Id.is_in(student_ids.clone()))
-        .all(&db)
-        .await
-        .map_err(|_| AppResponse::error(StatusCode::INTERNAL_SERVER_ERROR, "查詢學生姓名失敗"))?;
-
-    let member_name_map: HashMap<Uuid, String> =
-        members_list.into_iter().map(|m| (m.id, m.name)).collect();
+    let member_name_map = get_members_name_hashmap(&db, student_ids).await?;
 
     let result: Vec<StudentInfoView> = infos_with_exams
         .into_iter()

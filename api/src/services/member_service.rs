@@ -9,6 +9,7 @@ use sea_orm::ActiveValue::Set;
 use sea_orm::{
     ActiveModelTrait, ColumnTrait, ConnectionTrait, DatabaseConnection, EntityTrait, QueryFilter,
 };
+use std::collections::HashMap;
 use uuid::Uuid;
 use validator::Validate;
 
@@ -185,4 +186,23 @@ where
             Ok(new_member_result)
         }
     }
+}
+
+pub(crate) async fn get_members_name_hashmap<C>(
+    db: &C,
+    ids: Vec<Uuid>,
+) -> Result<HashMap<Uuid, String>, (StatusCode, Json<AppResponse>)>
+where
+    C: ConnectionTrait,
+{
+    let members_list = members::Entity::find()
+        .filter(members::Column::Id.is_in(ids))
+        .all(db)
+        .await
+        .map_err(|e| {
+            error!("get_members_name_hashmap error:{}", e);
+            AppResponse::error(StatusCode::INTERNAL_SERVER_ERROR, "查詢成員名稱失敗")
+        })?;
+
+    Ok(members_list.into_iter().map(|m| (m.id, m.name)).collect())
 }

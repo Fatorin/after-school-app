@@ -1,5 +1,3 @@
-use crate::db::entities::announcements;
-use chrono::{TimeZone, Utc};
 use sea_orm::prelude::DateTimeWithTimeZone;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -18,20 +16,4 @@ pub struct AnnouncementView {
     pub title: String,
     pub content: String,
     pub updated_at: DateTimeWithTimeZone,
-}
-
-impl TryFrom<(announcements::Model, String)> for AnnouncementView {
-    type Error = String;
-
-    fn try_from(
-        (model, name): (announcements::Model, String),
-    ) -> Result<Self, Self::Error> {
-        Ok(AnnouncementView {
-            id: model.id,
-            name,
-            title: model.title,
-            content: model.content,
-            updated_at: Utc.from_utc_datetime(&model.updated_at).into(),
-        })
-    }
 }
