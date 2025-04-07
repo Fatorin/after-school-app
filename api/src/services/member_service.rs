@@ -4,6 +4,7 @@ use axum::extract::{Path, State};
 use axum::http::StatusCode;
 use axum::Json;
 use chrono::Utc;
+use log::error;
 use sea_orm::ActiveValue::Set;
 use sea_orm::{
     ActiveModelTrait, ColumnTrait, ConnectionTrait, DatabaseConnection, EntityTrait, QueryFilter,
@@ -14,10 +15,10 @@ use validator::Validate;
 pub async fn get_members(
     State(db): State<DatabaseConnection>,
 ) -> Result<Json<AppResponse<Vec<MemberView>>>, (StatusCode, Json<AppResponse>)> {
-    let members = members::Entity::find()
-        .all(&db)
-        .await
-        .map_err(|_| AppResponse::error(StatusCode::INTERNAL_SERVER_ERROR, "資料庫異常"))?;
+    let members = members::Entity::find().all(&db).await.map_err(|e| {
+        error!("{}", e);
+        AppResponse::error(StatusCode::INTERNAL_SERVER_ERROR, "資料庫異常")
+    })?;
 
     let mut result = vec![];
     for member in members {
@@ -67,10 +68,10 @@ pub async fn add_member(
         ..Default::default()
     };
 
-    new_member
-        .insert(&db)
-        .await
-        .map_err(|_| AppResponse::error(StatusCode::INTERNAL_SERVER_ERROR, "伺服器發生異常"))?;
+    new_member.insert(&db).await.map_err(|e| {
+        error!("{}", e);
+        AppResponse::error(StatusCode::INTERNAL_SERVER_ERROR, "伺服器發生異常")
+    })?;
 
     Ok(AppResponse::success("建立成功"))
 }
@@ -87,8 +88,7 @@ pub async fn update_member(
         ));
     }
 
-    let option_member = find_member_by_id(&db, member_id).await?;
-    let member = update_member_with_context(&db, option_member, payload.member_dto).await?;
+    let member = upsert_member_with_context(&db, member_id, payload.member_dto).await?;
 
     let member_view = MemberView {
         member_dto: MemberDto::from(member),
@@ -97,37 +97,47 @@ pub async fn update_member(
     Ok(AppResponse::success_with_data(member_view))
 }
 
-pub(crate) async fn find_member_by_id(
-    db: &DatabaseConnection,
+pub(crate) async fn find_member_by_id<C>(
+    db: &C,
     id: Uuid,
-) -> Result<Option<members::Model>, (StatusCode, Json<AppResponse>)> {
+) -> Result<Option<members::Model>, (StatusCode, Json<AppResponse>)>
+where
+    C: ConnectionTrait,
+{
     members::Entity::find()
         .filter(members::Column::Id.eq(id))
         .one(db)
         .await
-        .map_err(|_| AppResponse::error(StatusCode::INTERNAL_SERVER_ERROR, "資料庫異常"))
+        .map_err(|e| {
+            error!("find_member_by_id error:{}", e);
+            AppResponse::error(StatusCode::INTERNAL_SERVER_ERROR, "資料庫異常")
+        })
 }
 
 pub(crate) async fn find_member_by_id_number(
     db: &DatabaseConnection,
-    id: &str,
+    id_number: &str,
 ) -> Result<Option<members::Model>, (StatusCode, Json<AppResponse>)> {
     members::Entity::find()
-        .filter(members::Column::IdNumber.eq(id))
+        .filter(members::Column::IdNumber.eq(id_number))
         .one(db)
         .await
-        .map_err(|_| AppResponse::error(StatusCode::INTERNAL_SERVER_ERROR, "資料庫異常"))
+        .map_err(|e| {
+            error!("find_member_by_id_number error:{}", e);
+            AppResponse::error(StatusCode::INTERNAL_SERVER_ERROR, "資料庫異常")
+        })
 }
 
-pub(crate) async fn update_member_with_context<C>(
+pub(crate) async fn upsert_member_with_context<C>(
     db: &C,
-    member: Option<members::Model>,
+    member_id: Uuid,
     dto: MemberDto,
 ) -> Result<members::Model, (StatusCode, Json<AppResponse>)>
 where
     C: ConnectionTrait,
 {
-    match member {
+    let option_member = find_member_by_id(db, member_id).await?;
+    match option_member {
         Some(member) => {
             let mut member: members::ActiveModel = member.into();
             member.name = Set(dto.name);
@@ -143,16 +153,36 @@ where
             member.joined_at = Set(dto.joined_at.naive_utc());
             member.updated_at = Set(Utc::now().naive_utc());
 
-            let member: members::Model = member
-                .update(db)
-                .await
-                .map_err(|_| AppResponse::error(StatusCode::INTERNAL_SERVER_ERROR, "更新失敗"))?;
+            let result = member.update(db).await.map_err(|e| {
+                error!("upsert_member_with_context error:{}", e);
+                AppResponse::error(StatusCode::INTERNAL_SERVER_ERROR, "伺服器發生異常")
+            })?;
 
-            Ok(member)
+            Ok(result)
         }
-        None => Err(AppResponse::error(
-            StatusCode::BAD_REQUEST,
-            "無法找到學生資料",
-        )),
+        None => {
+            let new_member = members::ActiveModel {
+                id: Default::default(),
+                name: Set(dto.name),
+                gender: Set(dto.gender),
+                id_number: Set(dto.id_number),
+                birth_date: Set(dto.birth_date),
+                home_phone_number: Set(dto.home_phone_number),
+                mobile_phone_number: Set(dto.mobile_phone_number),
+                address: Set(dto.address),
+                title: Set(dto.title),
+                line_id: Set(dto.line_id),
+                comment: Set(dto.comment),
+                joined_at: Set(dto.joined_at.naive_utc()),
+                ..Default::default()
+            };
+
+            let new_member_result = new_member.insert(db).await.map_err(|e| {
+                error!("upsert_member_with_context error:{}", e);
+                AppResponse::error(StatusCode::INTERNAL_SERVER_ERROR, "伺服器發生異常")
+            })?;
+
+            Ok(new_member_result)
+        }
     }
 }

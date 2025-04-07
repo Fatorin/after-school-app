@@ -2,7 +2,7 @@ use crate::db::entities::{members, students};
 use crate::models::{
     student_and_member_to_view, AddStudentRequest, AppResponse, StudentView, UpdateStudentRequest,
 };
-use crate::services::member_service::{find_member_by_id, update_member_with_context};
+use crate::services::member_service::upsert_member_with_context;
 use axum::extract::{Path, State};
 use axum::http::StatusCode;
 use axum::Json;
@@ -65,56 +65,10 @@ pub async fn add_student(
         .await
         .map_err(|_| AppResponse::error(StatusCode::INTERNAL_SERVER_ERROR, "資料庫異常"))?;
 
-    let member_id = match find_member_by_id(&db, member_id).await? {
-        Some(member) => {
-            let mut member: members::ActiveModel = member.into();
-            member.name = Set(payload.member_dto.name);
-            member.gender = Set(payload.member_dto.gender);
-            member.id_number = Set(payload.member_dto.id_number);
-            member.birth_date = Set(payload.member_dto.birth_date);
-            member.home_phone_number = Set(payload.member_dto.home_phone_number);
-            member.mobile_phone_number = Set(payload.member_dto.mobile_phone_number);
-            member.address = Set(payload.member_dto.address);
-            member.title = Set(payload.member_dto.title);
-            member.line_id = Set(payload.member_dto.line_id);
-            member.comment = Set(payload.member_dto.comment);
-            member.joined_at = Set(payload.member_dto.joined_at.naive_utc());
-            member.updated_at = Set(Utc::now().naive_utc());
-
-            member
-                .update(&txn)
-                .await
-                .map_err(|_| AppResponse::error(StatusCode::INTERNAL_SERVER_ERROR, "更新失敗"))?;
-
-            member_id
-        }
-        None => {
-            let new_member = members::ActiveModel {
-                id: Default::default(),
-                name: Set(payload.member_dto.name),
-                gender: Set(payload.member_dto.gender),
-                id_number: Set(payload.member_dto.id_number),
-                birth_date: Set(payload.member_dto.birth_date),
-                home_phone_number: Set(payload.member_dto.home_phone_number),
-                mobile_phone_number: Set(payload.member_dto.mobile_phone_number),
-                address: Set(payload.member_dto.address),
-                title: Set(payload.member_dto.title),
-                line_id: Set(payload.member_dto.line_id),
-                comment: Set(payload.member_dto.comment),
-                joined_at: Set(payload.member_dto.joined_at.naive_utc()),
-                ..Default::default()
-            };
-
-            let new_member_result = new_member.insert(&txn).await.map_err(|_| {
-                AppResponse::error(StatusCode::INTERNAL_SERVER_ERROR, "伺服器發生異常")
-            })?;
-
-            new_member_result.id
-        }
-    };
+    let member = upsert_member_with_context(&txn, member_id, payload.member_dto).await?;
 
     let new_student = students::ActiveModel {
-        member_id: Set(member_id),
+        member_id: Set(member.id),
         school_name: Set(payload.student_dto.school_name),
         grade: Set(payload.student_dto.grade),
         is_pg: Set(payload.student_dto.is_pg),
@@ -159,8 +113,7 @@ pub async fn update_student(
         .await
         .map_err(|_| AppResponse::error(StatusCode::INTERNAL_SERVER_ERROR, "資料庫異常"))?;
 
-    let option_member = find_member_by_id(&db, id).await?;
-    let member = update_member_with_context(&txn, option_member, payload.member_dto).await?;
+    let member = upsert_member_with_context(&txn, id, payload.member_dto).await?;
 
     let student = match find_student_by_id(&db, id).await? {
         Some(student) => {
