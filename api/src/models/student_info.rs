@@ -28,7 +28,7 @@ pub struct StudentExamDto {
 pub struct UpsertStudentInfoRequest {
     #[serde(flatten)]
     pub info_dto: StudentInfoDto,
-    pub exams_dto: [StudentExamDto; 2],
+    pub exams_dto: Vec<StudentExamDto>,
 }
 
 #[derive(Debug, Serialize)]

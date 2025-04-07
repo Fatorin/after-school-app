@@ -113,24 +113,23 @@ pub async fn add_student_infos(
         .await
         .map_err(|e| AppResponse::error(StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
-    if let Some(exams) = student_exams_dto {
-        for exam_dto in exams {
-            let student_exam = student_exams::ActiveModel {
-                student_infos_id: Set(inserted_info.id),
-                semester: Set(exam_dto.semester),
-                exam_type: Set(exam_dto.exam_type),
-                chinese_score: Set(exam_dto.chinese_score),
-                english_score: Set(exam_dto.english_score),
-                math_score: Set(exam_dto.math_score),
-                science_score: Set(exam_dto.science_score),
-                social_studies_score: Set(exam_dto.social_studies_score),
-                ..Default::default()
-            };
+    for exam_dto in student_exams_dto {
+        let student_exam = student_exams::ActiveModel {
+            student_infos_id: Set(inserted_info.id),
+            semester: Set(exam_dto.semester),
+            exam_type: Set(exam_dto.exam_type),
+            chinese_score: Set(exam_dto.chinese_score),
+            english_score: Set(exam_dto.english_score),
+            math_score: Set(exam_dto.math_score),
+            science_score: Set(exam_dto.science_score),
+            social_studies_score: Set(exam_dto.social_studies_score),
+            ..Default::default()
+        };
 
-            student_exam.insert(&txn).await.map_err(|e| {
-                AppResponse::error(StatusCode::INTERNAL_SERVER_ERROR, e.to_string())
-            })?;
-        }
+        student_exam
+            .insert(&txn)
+            .await
+            .map_err(|e| AppResponse::error(StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
     }
 
     txn.commit()
