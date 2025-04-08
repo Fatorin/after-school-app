@@ -2,7 +2,6 @@ import { format, isValid } from "date-fns";
 import { ColumnDef } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
 import { Edit2 } from "lucide-react";
-import { BaseRecord, ColumnConfig, EnumSelectProps } from '@/types/generic_table';
 import { Input } from '@/components/ui/input';
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
@@ -14,6 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { DatePicker } from "../ui/date-picker";
+import { BaseRecord, ColumnConfig, EnumSelectProps } from "@/types/generic-table";
 
 export function createGenericColumns<T extends BaseRecord>({
   columnConfigs,

@@ -29,19 +29,21 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { ChevronDown, Loader2, RotateCcw, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
-import { BaseRecord } from "@/types/generic_table";
 import { Skeleton } from "@/components/ui/skeleton";
+import { BaseRecord } from "@/types/generic-table";
 
 interface DataTableProps<T extends BaseRecord> {
   columns: ColumnDef<T>[];
   data: T[];
   isLoading?: boolean;
+  onAddNew?: () => void;
 }
 
 export function DataTable<T extends BaseRecord>({
   columns,
   data,
   isLoading = false,
+  onAddNew,
 }: DataTableProps<T>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -153,57 +155,68 @@ export function DataTable<T extends BaseRecord>({
             )}
           </span>
         </div>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="sm" disabled={isLoading}>
-              顯示欄位 <ChevronDown className="ml-2 h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-[200px]">
-            <DropdownMenuCheckboxItem
-              checked={table.getIsAllColumnsVisible()}
-              onCheckedChange={(checked) => handleToggleAll(checked)}
-              onSelect={(e) => {
-                e.preventDefault();
-              }}
-              className="border-b"
+        <div className="flex items-center gap-2">
+          {onAddNew && (
+            <Button
+              variant="default"
+              size="sm"
+              onClick={onAddNew}
             >
-              全選/取消全選
-            </DropdownMenuCheckboxItem>
-            <DropdownMenuSeparator />
-            {table
-              .getAllColumns()
-              .filter((c) => c.id !== 'actions')
-              .filter((column) => column.getCanHide())
-              .map((column) => (
-                <DropdownMenuCheckboxItem
-                  key={column.id}
-                  className="capitalize"
-                  checked={column.getIsVisible()}
-                  onSelect={(e) => {
-                    e.preventDefault();
-                  }}
-                  onCheckedChange={(value) => column.toggleVisibility(!!value)}
-                >
-                  {typeof column.columnDef.header === 'string'
-                    ? column.columnDef.header
-                    : column.id}
-                </DropdownMenuCheckboxItem>
-              ))}
-            <DropdownMenuSeparator />
-            <div className="p-2">
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-full"
-                onClick={handleReset}
-              >
-                <RotateCcw className="mr-2 h-4 w-4" />
-                重設預設值
+              新增
+            </Button>
+          )}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" disabled={isLoading}>
+                顯示欄位 <ChevronDown className="ml-2 h-4 w-4" />
               </Button>
-            </div>
-          </DropdownMenuContent>
-        </DropdownMenu>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-[200px]">
+              <DropdownMenuCheckboxItem
+                checked={table.getIsAllColumnsVisible()}
+                onCheckedChange={(checked) => handleToggleAll(checked)}
+                onSelect={(e) => {
+                  e.preventDefault();
+                }}
+                className="border-b"
+              >
+                全選/取消全選
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuSeparator />
+              {table
+                .getAllColumns()
+                .filter((c) => c.id !== 'actions')
+                .filter((column) => column.getCanHide())
+                .map((column) => (
+                  <DropdownMenuCheckboxItem
+                    key={column.id}
+                    className="capitalize"
+                    checked={column.getIsVisible()}
+                    onSelect={(e) => {
+                      e.preventDefault();
+                    }}
+                    onCheckedChange={(value) => column.toggleVisibility(!!value)}
+                  >
+                    {typeof column.columnDef.header === 'string'
+                      ? column.columnDef.header
+                      : column.id}
+                  </DropdownMenuCheckboxItem>
+                ))}
+              <DropdownMenuSeparator />
+              <div className="p-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full"
+                  onClick={handleReset}
+                >
+                  <RotateCcw className="mr-2 h-4 w-4" />
+                  重設預設值
+                </Button>
+              </div>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
 
       <div className="rounded-md border">

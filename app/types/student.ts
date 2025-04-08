@@ -1,6 +1,6 @@
-import { ColumnConfig } from "@/types/generic_table";
 import { z, ZodNullable } from "zod";
 import { DateFieldsMap } from "./common";
+import { ColumnConfig } from "./generic-table";
 
 export interface Student {
   id: string;

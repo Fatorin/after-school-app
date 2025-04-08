@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { useApiRequest } from '@/hooks/use-api-request';
+import { AuthenticationError, useApiRequest } from '@/hooks/use-api-request';
 import { DateFieldsMap } from '@/types/common';
 
 interface CrudOptions<T extends object, S extends Partial<T>> {
@@ -23,10 +23,7 @@ export function useCrud<T extends { id: string }, S extends Partial<T> = Partial
   const {
     basePath,
     dateFields,
-    transformBeforeUpsert = ((data: T) => {
-      const request: Partial<T> = { ...data };
-      return request;
-    }),
+    transformBeforeUpsert = ((data: T): S => ({ ...data } as unknown as S)),
     successMessages = {
       create: { title: "新增成功", description: "資料已新增" },
       update: { title: "更新成功", description: "資料已更新" },
@@ -34,12 +31,31 @@ export function useCrud<T extends { id: string }, S extends Partial<T> = Partial
     }
   } = options;
 
+  const withApiOperation = useCallback(
+    async <R>(operation: () => Promise<R>): Promise<R> => {
+      setIsLoading(true);
+      try {
+        const result = await operation();
+        setIsLoading(false);
+        return result;
+      } catch (error) {
+        setIsLoading(false);
+        if (error instanceof AuthenticationError) {
+          console.log("Authentication error caught in useCrud, redirecting...");
+          throw error;
+        }
+        console.error("CRUD Error:", error);
+        throw error;
+      }
+    },
+    []
+  );
+
   const fetchItems = useCallback(async () => {
     if (!initialized) {
       setInitialized(true);
     }
-    try {
-      setIsLoading(true);
+    return withApiOperation(async () => {
       const { data } = await handleApiRequest<T[]>({
         url: basePath,
         options: { method: 'GET' },
@@ -47,57 +63,55 @@ export function useCrud<T extends { id: string }, S extends Partial<T> = Partial
       });
       if (data) setItems(data);
       return data;
-    } finally {
-      setIsLoading(false);
-    }
-  }, [basePath, handleApiRequest, dateFields, initialized]);
+    });
+  }, [initialized, handleApiRequest, basePath, dateFields, withApiOperation]);
 
-  const handleInsert = useCallback(async (item: T) => {
-    setIsLoading(true);
-    try {
-      const upsertReq = transformBeforeUpsert(item);
-      await handleApiRequest({
-        url: basePath,
-        options: { method: 'POST', body: JSON.stringify(upsertReq) },
-        successMessage: successMessages.create
+  const handleInsert = useCallback(
+    async (item: T) => {
+      return withApiOperation(async () => {
+        const upsertReq = transformBeforeUpsert(item);
+        await handleApiRequest({
+          url: basePath,
+          options: { method: 'POST', body: JSON.stringify(upsertReq) },
+          successMessage: successMessages.create
+        });
+        await fetchItems();
       });
-      await fetchItems();
-    } finally {
-      setIsLoading(false);
-    }
-  }, [basePath, handleApiRequest, fetchItems, transformBeforeUpsert, successMessages.create]);
+    },
+    [transformBeforeUpsert, handleApiRequest, basePath, successMessages.create, fetchItems, withApiOperation]
+  );
 
-  const handleUpdate = useCallback(async (item: T) => {
-    setIsLoading(true);
-    try {
-      const upsertReq = transformBeforeUpsert(item);
-      const result = await handleApiRequest<T>({
-        url: `${basePath}/${item.id}`,
-        options: { method: 'PUT', body: JSON.stringify(upsertReq) },
-        dateFields: dateFields,
-        successMessage: successMessages.update
+  const handleUpdate = useCallback(
+    async (item: T) => {
+      return withApiOperation(async () => {
+        const upsertReq = transformBeforeUpsert(item);
+        const result = await handleApiRequest<T>({
+          url: `${basePath}/${item.id}`,
+          options: { method: 'PUT', body: JSON.stringify(upsertReq) },
+          dateFields: dateFields,
+          successMessage: successMessages.update
+        });
+        await fetchItems();
+        if (!result.data) throw new Error('更新失敗：沒有回傳資料');
+        return result.data;
       });
-      await fetchItems();
-      if (!result.data) throw new Error('更新失敗：沒有回傳資料');
-      return result.data;
-    } finally {
-      setIsLoading(false);
-    }
-  }, [basePath, handleApiRequest, fetchItems, dateFields, transformBeforeUpsert, successMessages.update]);
+    },
+    [transformBeforeUpsert, handleApiRequest, basePath, dateFields, successMessages.update, fetchItems, withApiOperation]
+  );
 
-  const handleDelete = useCallback(async (item: T) => {
-    setIsLoading(true);
-    try {
-      await handleApiRequest({
-        url: `${basePath}/${item.id}`,
-        options: { method: 'DELETE' },
-        successMessage: successMessages.delete
+  const handleDelete = useCallback(
+    async (item: T) => {
+      return withApiOperation(async () => {
+        await handleApiRequest({
+          url: `${basePath}/${item.id}`,
+          options: { method: 'DELETE' },
+          successMessage: successMessages.delete
+        });
+        await fetchItems();
       });
-      await fetchItems();
-    } finally {
-      setIsLoading(false);
-    }
-  }, [basePath, handleApiRequest, fetchItems, successMessages.delete]);
+    },
+    [handleApiRequest, basePath, successMessages.delete, fetchItems, withApiOperation]
+  );
 
   return {
     items,

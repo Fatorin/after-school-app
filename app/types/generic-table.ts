@@ -1,5 +1,6 @@
-import { FormStoreConfig } from "@/stores/form-store";
+import { FormStore } from "@/stores/form-store";
 import { z } from "zod";
+import { UseBoundStore, StoreApi } from "zustand";
 
 export type FieldType = 'text' | 'enum' | 'boolean' | 'number' | 'date' | 'password';
 export type ViewMode = 'list' | 'preview';
@@ -40,11 +41,11 @@ export interface DataTableProps<T extends BaseRecord, S extends z.ZodRawShape> {
   viewConfig?: ViewConfig;
   permissionConfig: PermissionConfig<T>;
   userRole: string;
-  schema: FormStoreConfig<S>;
   onInsert: (record: T) => Promise<void>;
   onUpdate: (record: T) => Promise<T>;
   onDelete: (record: T) => Promise<void>;
   isLoading?: boolean;
+  formStore: UseBoundStore<StoreApi<FormStore<S>>>,
 }
 
 export interface QuickListProps<T extends BaseRecord> {

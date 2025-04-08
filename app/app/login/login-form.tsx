@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { authService } from '@/lib/api/client-auth';
 
 export default function LoginForm() {
   const [username, setUsername] = useState('');
@@ -20,33 +21,18 @@ export default function LoginForm() {
     setIsLoading(true);
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({ username, password }),
+      await authService.login(username, password);
+      toast.success("登入成功", {
+        description: "正在為您導向頁面...",
       });
 
-      if (response.ok) {
-        toast.success("登入成功", {
-          description: "正在為您導向頁面...",
-        });
-
-        const from = searchParams.get('from');
-        router.push(from || '/');
-        router.refresh();
-      } else {
-        const data = await response.json();
-        toast.error("登入失敗", {
-          description: data.message || "請檢查您的帳號密碼是否正確",
-        });
-      }
+      const from = searchParams.get('from');
+      router.push(from || '/');
+      router.refresh();
     } catch (error) {
       console.error('登入錯誤:', error);
-      toast.error("系統錯誤", {
-        description: "無法連接到伺服器，請稍後再試",
+      toast.error("登入失敗", {
+        description: error instanceof Error ? error.message : "請檢查您的帳號密碼是否正確",
       });
     } finally {
       setIsLoading(false);

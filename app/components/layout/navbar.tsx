@@ -1,10 +1,11 @@
 'use client'
 
-import { Home, Users, GraduationCap, School, LogOut } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Home, Users, GraduationCap, School, LogOut, Church, Book } from 'lucide-react';
 import NavButton from './nav-button';
 import { usePathname } from 'next/navigation';
-import { useAuth } from '@/hooks/use-auth';
 import { Button } from '../ui/button';
+import { authService } from '@/lib/api/client-auth';
 
 const noNavbarRoutes = [
   '/login',
@@ -13,26 +14,35 @@ const noNavbarRoutes = [
 
 const navItems = [
   { icon: Home, text: '首頁', href: '/' },
-  { icon: School, text: '教職名單', href: '/teachers' },
-  { icon: Users, text: '學生資料', href: '/students' },
-  { icon: GraduationCap, text: '學生成績', href: '/grades' },
+  { icon: Church, text: '會友名單', href: '/members' },
+  { icon: Users, text: '教職名單', href: '/teachers' },
+  { icon: School, text: '學生資料', href: '/students' },
+  { icon: Book, text: '學生成績', href: '/student_infos' },
   { icon: GraduationCap, text: '簽到表', href: '/attendances' },
 ] as const;
 
 const NavbarLayout = () => {
+  const router = useRouter();
   const pathname = usePathname();
-  const { logout } = useAuth();
-  
+
+  const logout = async () => {
+    try {
+      await authService.logout();
+      router.push('/login');
+    } catch (error) {
+      console.error('登出過程中發生錯誤:', error);
+    }
+  };
+
   return (
     <nav className="border-b">
       <div className="max-full mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
-          {/* 左側 Logo */}
+
           <div className="text-xl font-bold">
-            課後班管理系統
+            教會社群系統
           </div>
 
-          {/* 導航選項 */}
           <div className="flex items-center space-x-1">
             {navItems.map((item) => (
               <NavButton

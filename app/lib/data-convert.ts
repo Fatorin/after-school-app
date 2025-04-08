@@ -1,6 +1,6 @@
 import { isValid, parse, parseISO } from "date-fns";
-import { FieldType } from "@/types/generic_table";
 import { DateFieldsMap } from "@/types/common";
+import { FieldType } from "@/types/generic-table";
 
 export const GetConvertedValue = (fileType: FieldType | undefined, value: unknown) => {
   let convertedValue = value;

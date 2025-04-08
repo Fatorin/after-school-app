@@ -15,8 +15,8 @@ import {
 import { Student } from '@/types/student';
 import { AttendanceRecord, AttendanceStudent } from '@/types/attendance';
 import { useCrud } from '@/hooks/use-crud';
-import { API_PATH } from '../apis/common';
-import { useAttendanceApi } from '../apis/attendance';
+import { useAttendanceApi } from '@/lib/api/attendance';
+import { API_PATH } from '@/lib/api/common';
 
 const AttendanceTable = () => {
   const {

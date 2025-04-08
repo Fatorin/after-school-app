@@ -1,15 +1,14 @@
 'use client'
 
-import { useCallback, useEffect } from 'react';
+import { useEffect } from 'react';
 import { GenericDataTable } from '@/components/generic_table/generic-data-table';
-import { Student, studentColumns, studentSchema, StudentSchemaShape, StudentUpsertReq } from '@/types/student';
 import { useCrud } from '@/hooks/use-crud';
+import { Member, memberColumns, memberSchema, MemberSchemaShape, MemberUpsertRequest } from '@/types/member';
 import { createFormStore } from '@/stores/form-store';
 import { Me } from '@/types/me';
 import { API_PATH } from '@/lib/api/common';
 
-export function StudentList({ me }: { me: Me | null }) {
-
+export function MemberList({ me }: { me: Me | null }) {
   const {
     items,
     initialized,
@@ -18,14 +17,15 @@ export function StudentList({ me }: { me: Me | null }) {
     handleInsert,
     handleUpdate,
     handleDelete
-  } = useCrud<Student, StudentUpsertReq>({
-    basePath: API_PATH.students,
+  } = useCrud<Member, MemberUpsertRequest>({
+    basePath: API_PATH.members,
     dateFields: {
-      date_of_birth: true
+      birth_date: true,
+      joined_at: true
     }
   });
 
-  const formStore = createFormStore(studentSchema);
+  const formStore = createFormStore(memberSchema);
 
   useEffect(() => {
     if (!initialized) {
@@ -34,20 +34,28 @@ export function StudentList({ me }: { me: Me | null }) {
   }, [fetchItems, initialized]);
 
   const permissionConfig = {
-    canEdit: useCallback(() => {
+    canEdit: (member: Member) => {
       if (!me) return false;
-      return me.role === 'super_admin' || me.role === 'admin';
-    }, [me]),
-    canDelete: useCallback(() => {
+      if (me.role === 'super_admin') return true;
+      return me.role === 'admin' && me.id === member.id;
+    },
+    canDelete: (member: Member) => {
       if (!me) return false;
-      return me.role === 'super_admin' || me.role === 'admin';
-    }, [me])
+      return (
+        (me.role === 'admin' && me.id === member.id) ||
+        (me.role === 'super_admin' && me.id !== member.id)
+      );
+    }
   };
 
   return (
-    <GenericDataTable<Student, StudentSchemaShape>
+    <GenericDataTable<Member, MemberSchemaShape>
       data={items}
-      columns={studentColumns}
+      columns={memberColumns}
+      viewConfig={{
+        enablePreviewMode: true,
+        defaultViewMode: 'list'
+      }}
       permissionConfig={permissionConfig}
       userRole={me?.role || 'user'}
       onInsert={handleInsert}

@@ -1,6 +1,5 @@
-import { ColumnConfig } from "@/types/generic_table";
+import { ColumnConfig } from "@/components/generic_table/data-table-types";
 import { z, ZodDate, ZodNullable, ZodString } from "zod";
-import { DateFieldsMap } from "./common";
 
 export interface Teacher {
   id: string;
@@ -26,10 +25,6 @@ export interface TeacherUpsertReq {
   id_number?: string;
   date_of_birth?: Date;
 }
-
-export const teacherDateFields: DateFieldsMap<Teacher> = {
-  date_of_birth: true,
-};
 
 export type TeacherSchemaShape = {
   name: z.ZodString;

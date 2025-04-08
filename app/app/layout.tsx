@@ -15,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "課後輔導班管理系統",
-  description: "課後輔導班的管理系統，用於管理學生資料以及追蹤學生狀況。",
+  title: "教會社群系統",
+  description: "教會會友的管理系統，用於管理會友資料以及課輔班學生狀況。",
 };
 
 export default function RootLayout({

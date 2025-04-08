@@ -2,13 +2,13 @@
 
 import { useEffect } from 'react';
 import { Teacher, teacherColumns, teacherSchema, TeacherSchemaShape, TeacherUpsertReq } from '@/types/teacher';
-import { useAuth } from '@/hooks/use-auth';
 import { GenericDataTable } from '@/components/generic_table/generic-data-table';
 import { useCrud } from '@/hooks/use-crud';
-import { API_PATH } from '../apis/common';
+import { createFormStore } from '@/stores/form-store';
+import { Me } from '@/types/me';
+import { API_PATH } from '@/lib/api/common';
 
-export function TeacherList() {
-  const { me } = useAuth();
+export function TeacherList({ me }: { me: Me | null }) {
   const {
     items,
     initialized,
@@ -23,6 +23,8 @@ export function TeacherList() {
       date_of_birth: true
     }
   });
+
+  const formStore = createFormStore(teacherSchema);
 
   useEffect(() => {
     if (!initialized) {
@@ -59,7 +61,7 @@ export function TeacherList() {
       onUpdate={handleUpdate}
       onDelete={handleDelete}
       isLoading={isLoading}
-      schema={teacherSchema}
+      formStore={formStore}
     />
   );
 }

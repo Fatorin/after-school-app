@@ -7,21 +7,14 @@ import { PencilIcon, PlusIcon, TrashIcon } from "lucide-react";
 import { EditDialog } from "@/components/generic_table/edit-dialog";
 import { Announcement, announcementSchema, AnnouncementSchemaShape, announcementColumns, AnnouncementUpsertReq } from "@/types/announcement";
 import { createFormStore } from "@/stores/form-store";
-import { API_PATH } from "@/app/apis/common";
 import { useCrud } from "@/hooks/use-crud";
+import { API_PATH } from "@/lib/api/common";
+import { Me } from "@/types/me";
 
-interface AnnouncementSectionProps {
-  me: {
-    id: string;
-    role: string;
-    name: string;
-  } | null;
-}
-
-const AnnouncementSection = ({ me }: AnnouncementSectionProps) => {
+const AnnouncementSection = (me: Me) => {
   const [editingAnnouncement, setEditingAnnouncement] = useState<Announcement | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const editFormStore = createFormStore(announcementSchema);
+  const formStore = createFormStore(announcementSchema);
   const {
     items,
     initialized,
@@ -142,7 +135,7 @@ const AnnouncementSection = ({ me }: AnnouncementSectionProps) => {
           open={isDialogOpen}
           onOpenChange={setIsDialogOpen}
           onSubmit={handleAnnouncementSubmit}
-          useFormStore={editFormStore}
+          useFormStore={formStore}
         />
       </CardContent>
     </Card>

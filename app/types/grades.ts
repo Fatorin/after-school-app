@@ -1,7 +1,7 @@
-import { ColumnConfig } from "@/types/generic_table";
 import { z, ZodNullable } from "zod";
 import { Student } from "./student";
 import { DateFieldsMap } from "./common";
+import { ColumnConfig } from "./generic-table";
 
 export interface StudentGrade {
   id: string;
@@ -70,6 +70,11 @@ const baseFields = z.object({
   academic_year: z.number(),
   semester: z.number(),
   exam_type: z.number(),
+  chinese_book: z.string().nullable(),
+  english_book: z.string().nullable(),
+  math_book: z.string().nullable(),
+  science_book: z.string().nullable(),
+  social_studies_book: z.string().nullable(),
   chinese_score: z.number().nullable(),
   english_score: z.number().nullable(),
   math_score: z.number().nullable(),
@@ -127,10 +132,17 @@ export const createStudentGradeColumns = (students: Student[]): ColumnConfig<Stu
 ];
 
 const baseDefaultValues = {
+  id: null,
+  name: '',
   student_id: '',
   academic_year: 0,
   semester: 0,
   exam_type: 0,
+  chinese_book: null,
+  english_book: null,
+  math_book: null,
+  science_book: null,
+  social_studies_book: null,
   chinese_score: null,
   english_score: null,
   math_score: null,

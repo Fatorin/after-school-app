@@ -1,11 +1,8 @@
-import React, { useMemo, useState, useCallback, useEffect } from 'react';
-import { LayoutGrid, List, Pencil, Trash2 } from 'lucide-react';
+import React, { useMemo, useCallback, useEffect } from 'react';
+import { Pencil, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { BaseRecord, DataTableProps } from '@/types/generic_table';
 import { DataTable } from './data-table';
 import { EditDialog } from './edit-dialog';
-import { SearchList } from './search-list';
-import { PreviewCard } from './preview-card';
 import { ColumnDef } from '@tanstack/react-table';
 import { z } from 'zod';
 import {
@@ -18,88 +15,47 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { createFormStore } from '@/stores/form-store';
 import { format } from 'date-fns';
+import { BaseRecord, DataTableProps } from '@/types/generic-table';
+import { useEditDialog } from './hooks/useEditDialog';
+import { useDeleteDialog } from './hooks/useDeleteDialog';
 
 export function GenericDataTable<T extends BaseRecord, S extends z.ZodRawShape>({
   data,
   columns,
-  viewConfig = {},
   permissionConfig,
   userRole,
   onInsert,
   onUpdate,
   onDelete,
   isLoading,
-  schema
+  formStore,
 }: DataTableProps<T, S>) {
-  const previewFormStore = createFormStore(schema);
-  const editFormStore = createFormStore(schema);
 
-  const { enablePreviewMode = true, defaultViewMode = 'list' } = viewConfig;
-  const [viewMode, setViewMode] = useState<'list' | 'preview'>(defaultViewMode);
-  const [dialogState, setDialogState] = useState<{
-    isOpen: boolean;
-    record: T | null;
-  }>({
-    isOpen: false,
-    record: null
-  });
-  const [selectedRecord, setSelectedRecord] = useState<T | null>(null);
-  const [searchQuery, setSearchQuery] = useState<string>('');
-  const [deleteDialogState, setDeleteDialogState] = useState<{
-    isOpen: boolean;
-    record: T | null;
-  }>({
-    isOpen: false,
-    record: null
-  });
+  const {
+    dialogState,
+    handleOpenDialog,
+    handleCloseDialog,
+    handleSubmit,
+  } = useEditDialog<T>(onUpdate, onInsert);
 
-  useEffect(() => {
-    if (selectedRecord) {
-      const updatedSelectedRecord = data.find(item => item.id === selectedRecord.id);
-      if (updatedSelectedRecord) {
-        setSelectedRecord(updatedSelectedRecord);
-      }
-    }
+  const {
+    deleteDialogState,
+    handleOpenDeleteDialog,
+    handleCloseDeleteDialog,
+    handleConfirmDelete,
+  } = useDeleteDialog<T>(onDelete);
+
+  const [selectedRecord, setSelectedRecord] = React.useState<T | null>(null);
+  const updatedSelectedRecord = useMemo(() => {
+    return selectedRecord ? data.find(item => item.id === selectedRecord.id) || null : null;
   }, [data, selectedRecord]);
 
-  const handleSubmit = useCallback(async (record: T) => {
-    try {
-      await (dialogState.record?.id ? onUpdate(record) : onInsert(record));
-      setDialogState(prev => ({ ...prev, isOpen: false }));
-    } catch (error) {
-      console.error('Operation failed:', error);
-    }
-  }, [dialogState.record?.id, onUpdate, onInsert]);
+  useEffect(() => {
+    setSelectedRecord(updatedSelectedRecord);
+  }, [updatedSelectedRecord]);
 
-  const handleOpenDialog = useCallback((record: T | null = null) => {
-    setDialogState({
-      isOpen: true,
-      record
-    });
-  }, []);
-
-  const handleCloseDialog = useCallback(() => {
-    setDialogState({
-      isOpen: false,
-      record: null
-    });
-  }, []);
-
-  const handleDelete = useCallback(async (record: T) => {
-    try {
-      await onDelete(record);
-      setDeleteDialogState({ isOpen: false, record: null });
-      if (viewMode === 'preview' && selectedRecord?.id === record.id) {
-        setSelectedRecord(null);
-      }
-    } catch (error) {
-      console.error('Delete operation failed:', error);
-    }
-  }, [onDelete, viewMode, selectedRecord]);
-
-  const renderCellValue = useCallback((value: unknown, column: typeof columns[0]) => {
+  const formatCellValue = useCallback((value: unknown, column: typeof columns[0]) => {
     if (column.type === 'enum' && column.options) {
       return column.options.find(opt => opt.value === value)?.label || '';
     }
@@ -118,7 +74,7 @@ export function GenericDataTable<T extends BaseRecord, S extends z.ZodRawShape>(
       .map(column => ({
         accessorKey: String(column.key),
         header: column.label,
-        cell: ({ row }) => renderCellValue(row.getValue(String(column.key)), column)
+        cell: ({ row }) => formatCellValue(row.getValue(String(column.key)), column),
       }));
 
     if (!permissionConfig.canEdit) return dataColumns;
@@ -134,7 +90,7 @@ export function GenericDataTable<T extends BaseRecord, S extends z.ZodRawShape>(
           if (!canEdit) return null;
 
           return (
-            <div className="flex gap-2">
+            <div className="flex justify-end gap-2">
               {canEdit && (
                 <Button
                   variant="ghost"
@@ -148,132 +104,63 @@ export function GenericDataTable<T extends BaseRecord, S extends z.ZodRawShape>(
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => setDeleteDialogState({
-                    isOpen: true,
-                    record: row.original
-                  })}
+                  onClick={() => handleOpenDeleteDialog(row.original)}
                 >
                   <Trash2 className="h-4 w-4 mr-2" />
                 </Button>
               )}
             </div>
           );
-        }
-      }
+        },
+      },
     ];
-  }, [columns, permissionConfig, renderCellValue, userRole, handleOpenDialog]);
+  }, [columns, permissionConfig, formatCellValue, userRole, handleOpenDialog, handleOpenDeleteDialog]);
 
   if (!columns.length) return null;
 
-  const displayField = columns[0].key;
-  const subDisplayField = columns.length > 1 ? columns[columns.length - 1].key : displayField;
-
-  const renderViewModeButton = (mode: 'list' | 'preview', Icon: typeof List | typeof LayoutGrid, label: string) => (
-    <Button
-      variant={viewMode === mode ? 'default' : 'outline'}
-      size="sm"
-      onClick={() => setViewMode(mode)}
-    >
-      <Icon className="h-4 w-4 mr-2" />
-      {label}
-    </Button>
-  );
-
-  const renderContent = () => {
-    if (viewMode === 'list') {
-      return (
-        <DataTable
-          columns={tableColumns}
-          data={data}
-          isLoading={isLoading}
-        />
-      );
-    }
-
-    return (
-      <div className="grid grid-cols-12 gap-4">
-        <div className="col-span-4">
-          <SearchList
-            data={data}
-            selectedId={selectedRecord?.id || null}
-            onSelect={setSelectedRecord}
-            searchQuery={searchQuery}
-            onSearchChange={(e) => setSearchQuery(e.target.value)}
-            displayField={displayField}
-            subDisplayField={subDisplayField}
-            columns={columns}
-          />
-        </div>
-        <div className="col-span-8">
-          <PreviewCard<T, S>
-            record={selectedRecord}
-            columns={columns}
-            canEdit={(record) => permissionConfig.canEdit(record, userRole)}
-            canDelete={(record) => permissionConfig.canDelete(record, userRole)}
-            onUpdate={onUpdate}
-            onDelete={onDelete}
-            useFormStore={previewFormStore} />
-        </div>
-      </div>
-    );
-  };
-
   return (
-    <>
-      <div className="space-y-4">
-        {enablePreviewMode && (
-          <div className="flex justify-between items-center">
-            <div className="flex gap-2">
-              {renderViewModeButton('list', List, '列表')}
-              {renderViewModeButton('preview', LayoutGrid, '卡片')}
-            </div>
-            <Button
-              variant="default"
-              size="sm"
-              onClick={() => handleOpenDialog(null)}
-            >
-              新增
-            </Button>
-          </div>
-        )}
+    <div className="space-y-4">
+      <DataTable
+        columns={tableColumns}
+        data={data}
+        isLoading={isLoading}
+        onAddNew={() => handleOpenDialog(null)}
+      />
 
-        {renderContent()}
+      <EditDialog<T, S>
+        record={dialogState.record}
+        columns={columns}
+        open={dialogState.isOpen}
+        onOpenChange={handleCloseDialog}
+        onSubmit={handleSubmit}
+        useFormStore={formStore}
+      />
 
-        <EditDialog<T, S>
-          record={dialogState.record}
-          columns={columns}
-          open={dialogState.isOpen}
-          onOpenChange={handleCloseDialog}
-          onSubmit={handleSubmit}
-          useFormStore={editFormStore} />
-
-        <AlertDialog
-          open={deleteDialogState.isOpen}
-          onOpenChange={(isOpen) =>
-            setDeleteDialogState(prev => ({ ...prev, isOpen }))
-          }
-        >
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>確認刪除</AlertDialogTitle>
-              <AlertDialogDescription>
-                確定要刪除此筆資料嗎？此操作無法復原。
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>取消</AlertDialogCancel>
-              <AlertDialogAction
-                onClick={() =>
-                  deleteDialogState.record &&
-                  handleDelete(deleteDialogState.record)
+      <AlertDialog
+        open={deleteDialogState.isOpen}
+        onOpenChange={handleCloseDeleteDialog}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>確認刪除</AlertDialogTitle>
+            <AlertDialogDescription>
+              確定要刪除此筆資料嗎？此操作無法復原。
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (deleteDialogState.record) {
+                  handleConfirmDelete(deleteDialogState.record);
                 }
-              >
-                確認刪除
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-      </div>
-    </>
+              }}
+            >
+              確認刪除
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
   );
 }

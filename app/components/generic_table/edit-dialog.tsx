@@ -9,11 +9,11 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { GetConvertedValue } from "@/lib/data_convert";
-import { BaseRecord, ColumnConfig } from '@/types/generic_table';
+import { GetConvertedValue } from "@/lib/data-convert";
 import { renderField } from "./helper";
 import { z } from "zod";
 import { FormStore } from "@/stores/form-store";
+import { BaseRecord, ColumnConfig } from "@/types/generic-table";
 
 type InferSchemaType<S extends z.ZodRawShape> = z.infer<z.ZodObject<S>>;
 
@@ -32,7 +32,7 @@ export function EditDialog<T extends BaseRecord, S extends z.ZodRawShape>({
   open,
   onOpenChange,
   onSubmit,
-  useFormStore
+  useFormStore,
 }: EditDialogProps<T, S>) {
   const {
     values,
@@ -53,7 +53,7 @@ export function EditDialog<T extends BaseRecord, S extends z.ZodRawShape>({
       if (record) {
         const recordValues = Object.entries(record).reduce((acc, [key, value]) => ({
           ...acc,
-          [key]: value
+          [key]: value,
         }), {} as Partial<InferSchemaType<S>>);
         setValues(recordValues);
       } else {
@@ -71,35 +71,16 @@ export function EditDialog<T extends BaseRecord, S extends z.ZodRawShape>({
 
   const handleSubmit = async () => {
     if (validateForm()) {
-      try {
-        const submitData = Object.entries(values).reduce((acc, [key, value]) => ({
-          ...acc,
-          [key]: value
-        }), {} as T);
-
-        await onSubmit(submitData);
-        resetForm();
-        onOpenChange(false);
-      } catch (error) {
-        console.error('提交失敗:', error);
-      }
+      const submitData = Object.entries(values).reduce((acc, [key, value]) => ({
+        ...acc,
+        [key]: value,
+      }), {} as T);
+      await onSubmit(submitData);
     }
   };
 
-  const handleClose = () => {
-    console.log("handleClose called");
-    resetForm();
-    onOpenChange(false);
-  };
-
   return (
-    <Dialog open={open} onOpenChange={(isOpen) => {
-      if (!isOpen) {
-        handleClose();
-      } else {
-        onOpenChange(true);
-      }
-    }}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         className="max-w-[90vw] md:max-w-[80vw] lg:max-w-[1200px] max-h-[90vh] flex flex-col"
       >
@@ -131,7 +112,7 @@ export function EditDialog<T extends BaseRecord, S extends z.ZodRawShape>({
                   onChange: (value) => handleChange(column.key as keyof T & keyof InferSchemaType<S>, value),
                   error: errors[column.key as keyof typeof errors],
                   isEditing: true,
-                  isNewRecord
+                  isNewRecord,
                 })}
               </div>
             ))}
@@ -139,7 +120,7 @@ export function EditDialog<T extends BaseRecord, S extends z.ZodRawShape>({
         </div>
 
         <DialogFooter className="shrink-0 gap-2 mt-6 pt-4 border-t">
-          <Button variant="outline" onClick={handleClose}>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
             取消
           </Button>
           <Button onClick={handleSubmit} disabled={!isValid}>
