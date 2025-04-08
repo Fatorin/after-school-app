@@ -1,5 +1,5 @@
-import { ColumnConfig } from "@/components/generic_table/data-table-types";
 import { z, ZodDate, ZodNullable, ZodString } from "zod";
+import { ColumnConfig } from "./generic-table";
 
 export interface Teacher {
   id: string;

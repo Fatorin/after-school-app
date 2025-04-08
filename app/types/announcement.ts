@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { ColumnConfig } from "./generic_table";
+import { ColumnConfig } from "./generic-table";
 import { DateFieldsMap } from "./common";
 
 export interface Announcement {

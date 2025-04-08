@@ -25,7 +25,7 @@ export function MemberList({ me }: { me: Me | null }) {
     }
   });
 
-  const formStore = createFormStore(memberSchema);
+  const memberFormStore = createFormStore(memberSchema);
 
   useEffect(() => {
     if (!initialized) {
@@ -52,16 +52,12 @@ export function MemberList({ me }: { me: Me | null }) {
     <GenericDataTable<Member, MemberSchemaShape>
       data={items}
       columns={memberColumns}
-      viewConfig={{
-        enablePreviewMode: true,
-        defaultViewMode: 'list'
-      }}
       permissionConfig={permissionConfig}
       userRole={me?.role || 'user'}
       onInsert={handleInsert}
       onUpdate={handleUpdate}
       onDelete={handleDelete}
       isLoading={isLoading}
-      formStore={formStore} />
+      formStore={memberFormStore} />
   );
 }

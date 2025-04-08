@@ -11,7 +11,7 @@ const HomePage = async () => {
   return (
     <div className="container mx-auto py-8 px-8 space-y-6">
       <h1 className="text-2xl font-bold">{me.name} 歡迎使用教會社群系統</h1>
-      <AnnouncementSection me={me} />
+      <AnnouncementSection me={me}/>
     </div>
   );
 };

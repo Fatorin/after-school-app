@@ -25,7 +25,7 @@ export function StudentList({ me }: { me: Me | null }) {
     }
   });
 
-  const formStore = createFormStore(studentSchema);
+  const studentFormStore = createFormStore(studentSchema);
 
   useEffect(() => {
     if (!initialized) {
@@ -54,6 +54,6 @@ export function StudentList({ me }: { me: Me | null }) {
       onUpdate={handleUpdate}
       onDelete={handleDelete}
       isLoading={isLoading}
-      formStore={formStore} />
+      formStore={studentFormStore} />
   );
 }

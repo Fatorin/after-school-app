@@ -25,11 +25,6 @@ export interface ColumnConfig<T> {
   defaultValue?: unknown;
 }
 
-export interface ViewConfig {
-  enablePreviewMode?: boolean;
-  defaultViewMode?: ViewMode;
-}
-
 export interface PermissionConfig<T extends BaseRecord> {
   canEdit: (record: T, userRole: string) => boolean;
   canDelete: (record: T, userRole: string) => boolean;
@@ -38,7 +33,6 @@ export interface PermissionConfig<T extends BaseRecord> {
 export interface DataTableProps<T extends BaseRecord, S extends z.ZodRawShape> {
   data: T[];
   columns: ColumnConfig<T>[];
-  viewConfig?: ViewConfig;
   permissionConfig: PermissionConfig<T>;
   userRole: string;
   onInsert: (record: T) => Promise<void>;
@@ -46,17 +40,6 @@ export interface DataTableProps<T extends BaseRecord, S extends z.ZodRawShape> {
   onDelete: (record: T) => Promise<void>;
   isLoading?: boolean;
   formStore: UseBoundStore<StoreApi<FormStore<S>>>,
-}
-
-export interface QuickListProps<T extends BaseRecord> {
-  data: T[];
-  selectedId: string | null;
-  onSelect: (record: T) => void;
-  searchQuery: string;
-  onSearchChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
-  displayField: keyof T;
-  subDisplayField: keyof T;
-  columns: ColumnConfig<T>[];
 }
 
 export interface EnumSelectProps {

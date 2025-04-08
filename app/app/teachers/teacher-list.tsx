@@ -24,7 +24,7 @@ export function TeacherList({ me }: { me: Me | null }) {
     }
   });
 
-  const formStore = createFormStore(teacherSchema);
+  const teacherFormStore = createFormStore(teacherSchema);
 
   useEffect(() => {
     if (!initialized) {
@@ -51,17 +51,13 @@ export function TeacherList({ me }: { me: Me | null }) {
     <GenericDataTable<Teacher, TeacherSchemaShape>
       data={items}
       columns={teacherColumns}
-      viewConfig={{
-        enablePreviewMode: true,
-        defaultViewMode: 'list'
-      }}
       permissionConfig={permissionConfig}
       userRole={me?.role || 'user'}
       onInsert={handleInsert}
       onUpdate={handleUpdate}
       onDelete={handleDelete}
       isLoading={isLoading}
-      formStore={formStore}
+      formStore={teacherFormStore}
     />
   );
 }

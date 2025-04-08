@@ -11,7 +11,7 @@ import { useCrud } from "@/hooks/use-crud";
 import { API_PATH } from "@/lib/api/common";
 import { Me } from "@/types/me";
 
-const AnnouncementSection = (me: Me) => {
+const AnnouncementSection = ({ me }: { me: Me }) => {
   const [editingAnnouncement, setEditingAnnouncement] = useState<Announcement | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const formStore = createFormStore(announcementSchema);
