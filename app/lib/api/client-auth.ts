@@ -23,7 +23,7 @@ export const authService = {
 
   logout: async () => {
     try {
-      const response = await fetch('/api/logout', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/logout`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
